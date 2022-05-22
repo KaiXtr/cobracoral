@@ -1,0 +1,10 @@
+# EXEMPLO DE CÓDIGO CC
+
+escrever("Digite o valor de x: ")
+VAR x = ler()
+escrever("Digite o valor de y: ")
+VAR y = ler()
+
+SE x > y ENTÃO escrever("x é maior que y")
+SENÃOSE x == y ENTÃO escrever("x e y são iguais")
+SENÃO escrever("x e y são iguais")
