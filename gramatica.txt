@@ -1,0 +1,3 @@
+expressao:	termo((MAIS|MENOS) termo)*
+termo:	fator((MULT|DIV) fator)*
+fator:	INTEIRO|REAL
