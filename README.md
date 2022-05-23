@@ -19,19 +19,31 @@ Comentários são trechos do código que não são processados pelo interpretado
 
 ## Aritmética
 **Adição:**
+`x mais y`
 `x + y`
 **Subtração:**
+`x menos y`
 `x - y`
 **Multiplicação:**
+`x vezes y`
 `x * y`
 `x × y`
 **Divisão:**
+`x dividido y`
 `x / y`
 `x \ y`
 `x ÷ y`
+**Resto da divisão:**
+`x resto y`
+`x % y`
 **Potenciação:**
+`x elevado y`
 `x ^ y`
 `x ** y`
+**Radiciação:**
+`x rad y`
+`x √ y`
+`x // y`
 
 ## Comparações Numéricas
 **Igualdade:**
@@ -58,9 +70,46 @@ Comentários são trechos do código que não são processados pelo interpretado
 `3 >= 6 ∴ falso`
 
 ## Comparações Lógicas
-**Conjunção:**
+**AND:**
 `1 e 1 ∴ verdadeiro`
 `0 e 1 ∴ falso`
+`1 & 0 ∴ falso`
+`0 & 0 ∴ falso`
+**OR:**
+`1 ou 1 ∴ verdadeiro`
+`0 ou 1 ∴ verdadeiro`
+`1 | 0 ∴ verdadeiro`
+`0 | 0 ∴ falso`
+**NAND:**
+`1 ne 1 ∴ falso`
+`0 ne 1 ∴ verdadeiro`
+`1 !& 0 ∴ verdadeiro`
+`0 ~& 0 ∴ verdadeiro`
+**NOR:**
+`1 nou 1 ∴ falso`
+`0 nou 1 ∴ falso`
+`1 !| 0 ∴ falso`
+`0 ~| 0 ∴ verdadeiro`
+**XOR:**
+`1 xou 1 ∴ falso`
+`0 xou 1 ∴ verdadeiro`
+`1 xou 0 ∴ verdadeiro`
+`0 xou 0 ∴ falso`
+**XNOR:**
+`1 xnou 1 ∴ verdadeiro`
+`0 xnou 1 ∴ falso`
+`1 xnou 0 ∴ falso`
+`0 xnou 0 ∴ verdadeiro`
+**Condicional:**
+`1 => 1 ∴ verdadeiro`
+`0 => 1 ∴ falso`
+`1 => 0 ∴ verdadeiro`
+`0 => 0 ∴ verdadeiro`
+**Bicondicional:**
+`1 <=> 1 ∴ verdadeiro`
+`0 <=> 1 ∴ falso`
+`1 <=> 0 ∴ falso`
+`0 <=> 0 ∴ verdadeiro`
 
 ## Entrada e Saída de Dados
 **Comando _Escrever (texto)_:** escreve uma mensagem de texto no terminal.
