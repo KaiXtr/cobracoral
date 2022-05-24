@@ -231,7 +231,6 @@ class Lexer:
 		if id_str in TT_OPERAÇÕES.keys(): return Token(TT_OPERAÇÕES[id_str], inicio=self.pos)
 		else: return Token(TT_PALAVRASCHAVE if id_str in TT_PALAVRASCHAVE else TT_IDE, id_str, inicio, self.pos)
 	
-
 	def fazer_op_ou_num(self,simbolo):
 		tok_tipo = simbolo
 		inicio = self.pos.copia()
@@ -563,7 +562,7 @@ class Parser:
 	def comp_expr(self):
 		resultado = ResultadoDoParser()
 
-		if self.tok_atual.combinam(TT_PALAVRASCHAVE, 'NÃO'):
+		if self.tok_atual.combinam(TT_PALAVRASCHAVE, ('NÃO','NAO','não','nao')):
 			op_tok = self.tok_atual
 			resultado.registrar_avanco()
 			self.avancar()
@@ -576,7 +575,6 @@ class Parser:
 		
 		if resultado.erro:
 			return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,"Estava esperando um inteiro, real, identificador, '+', '-', '(', '[', 'SE', 'PARA', 'ENQUANTO', 'FUNÇÃO' or 'NÃO'"))
-
 		return resultado.sucesso(node)
 
 	def arith_expr(self):
@@ -672,22 +670,22 @@ class Parser:
 			if resultado.erro: return resultado
 			return resultado.sucesso(list_expr)
 		
-		elif tok.combinam(TT_PALAVRASCHAVE, 'SE'):
+		elif tok.combinam(TT_PALAVRASCHAVE, ('SE','se')):
 			se_expr = resultado.registro(self.se_expr())
 			if resultado.erro: return resultado
 			return resultado.sucesso(se_expr)
 
-		elif tok.combinam(TT_PALAVRASCHAVE, 'PARA'):
+		elif tok.combinam(TT_PALAVRASCHAVE, ('PARA','para')):
 			para_expr = resultado.registro(self.para_expr())
 			if resultado.erro: return resultado
 			return resultado.sucesso(para_expr)
 
-		elif tok.combinam(TT_PALAVRASCHAVE, 'ENQUANTO'):
+		elif tok.combinam(TT_PALAVRASCHAVE, ('ENQUANTO','enquanto')):
 			enquanto_expr = resultado.registro(self.enquanto_expr())
 			if resultado.erro: return resultado
 			return resultado.sucesso(enquanto_expr)
 
-		elif tok.combinam(TT_PALAVRASCHAVE, 'FUNÇÃO'):
+		elif tok.combinam(TT_PALAVRASCHAVE, ('FUNÇÃO','FUNCÃO','FUNÇAO','FUNCAO','função','funcão','funçao','funcao')):
 			func_def = resultado.registro(self.func_def())
 			if resultado.erro: return resultado
 			return resultado.sucesso(func_def)
@@ -742,7 +740,7 @@ class Parser:
 		resultado = ResultadoDoParser()
 		caso_senao = None
 
-		if self.tok_atual.combinam(TT_PALAVRASCHAVE, 'SENÃO'):
+		if self.tok_atual.combinam(TT_PALAVRASCHAVE, ('SENÃO','SENAO','senão','senao')):
 			resultado.registrar_avanco()
 			self.avancar()
 
@@ -754,7 +752,7 @@ class Parser:
 				if resultado.erro: return resultado
 				caso_senao = (statements, True)
 
-				if self.tok_atual.combinam(TT_PALAVRASCHAVE, 'FIM'):
+				if self.tok_atual.combinam(TT_PALAVRASCHAVE, ('FIM','fim')):
 					resultado.registrar_avanco()
 					self.avancar()
 				else: return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,"Estava esperando um 'FIM'"))
@@ -769,7 +767,7 @@ class Parser:
 		resultado = ResultadoDoParser()
 		casos, caso_senao = [], None
 
-		if self.tok_atual.combinam(TT_PALAVRASCHAVE, 'SENÃOSE'):
+		if self.tok_atual.combinam(TT_PALAVRASCHAVE, ('SENÃOSE','SENAOSE','senãose','senaose')):
 			todos_os_casos = resultado.registro(self.se_expr_b())
 			if resultado.erro: return resultado
 			casos, caso_senao = todos_os_casos
@@ -793,7 +791,7 @@ class Parser:
 		condicao = resultado.registro(self.expr())
 		if resultado.erro: return resultado
 
-		if not self.tok_atual.combinam(TT_PALAVRASCHAVE, 'ENTÃO'):
+		if not self.tok_atual.combinam(TT_PALAVRASCHAVE, ('ENTÃO','ENTAO','então','entao')):
 			return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,f"Esperava 'ENTÃO'"))
 
 		resultado.registrar_avanco()
@@ -807,7 +805,7 @@ class Parser:
 			if resultado.erro: return resultado
 			casos.append((condicao, statements, True))
 
-			if self.tok_atual.combinam(TT_PALAVRASCHAVE, 'FIM'):
+			if self.tok_atual.combinam(TT_PALAVRASCHAVE, ('FIM','fim')):
 				resultado.registrar_avanco()
 				self.avancar()
 			else:
@@ -830,7 +828,7 @@ class Parser:
 	def para_expr(self):
 		resultado = ResultadoDoParser()
 
-		if not self.tok_atual.combinam(TT_PALAVRASCHAVE, 'PARA'):
+		if not self.tok_atual.combinam(TT_PALAVRASCHAVE, ('PARA','para')):
 			return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,f"Esperava 'PARA'"))
 
 		resultado.registrar_avanco()
@@ -852,7 +850,7 @@ class Parser:
 		inicio = resultado.registro(self.expr())
 		if resultado.erro: return resultado
 
-		if not self.tok_atual.combinam(TT_PALAVRASCHAVE, 'CADA'):
+		if not self.tok_atual.combinam(TT_PALAVRASCHAVE, ('CADA','cada')):
 			return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,f"Esperava 'CADA'"))
 		
 		resultado.registrar_avanco()
@@ -861,7 +859,7 @@ class Parser:
 		fim = resultado.registro(self.expr())
 		if resultado.erro: return resultado
 
-		if self.tok_atual.combinam(TT_PALAVRASCHAVE, 'PASSO'):
+		if self.tok_atual.combinam(TT_PALAVRASCHAVE, ('PASSO','passo')):
 			resultado.registrar_avanco()
 			self.avancar()
 
@@ -869,7 +867,7 @@ class Parser:
 			if resultado.erro: return resultado
 		else: passo = None
 
-		if not self.tok_atual.combinam(TT_PALAVRASCHAVE, 'ENTÃO'):
+		if not self.tok_atual.combinam(TT_PALAVRASCHAVE, ('ENTÃO','ENTAO','então','entao')):
 			return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,f"Esperava 'ENTÃO'"))
 
 		resultado.registrar_avanco()
@@ -882,7 +880,7 @@ class Parser:
 			body = resultado.registro(self.statements())
 			if resultado.erro: return resultado
 
-			if not self.tok_atual.combinam(TT_PALAVRASCHAVE, 'FIM'):
+			if not self.tok_atual.combinam(TT_PALAVRASCHAVE, ('FIM','fim')):
 				return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,f"Esperava 'FIM'"))
 
 			resultado.registrar_avanco()
@@ -898,7 +896,7 @@ class Parser:
 	def enquanto_expr(self):
 		resultado = ResultadoDoParser()
 
-		if not self.tok_atual.combinam(TT_PALAVRASCHAVE, 'ENQUANTO'):
+		if not self.tok_atual.combinam(TT_PALAVRASCHAVE, ('ENQUANTO','enquanto')):
 			return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,f"Estava esperando 'ENQUANTO'"))
 
 		resultado.registrar_avanco()
@@ -907,7 +905,7 @@ class Parser:
 		condicao = resultado.registro(self.expr())
 		if resultado.erro: return resultado
 
-		if not self.tok_atual.combinam(TT_PALAVRASCHAVE, 'ENTÃO'):
+		if not self.tok_atual.combinam(TT_PALAVRASCHAVE, ('ENTÃO','ENTAO','então','entao')):
 			return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,f"Estava esperando 'ENTÃO'"))
 
 		resultado.registrar_avanco()
@@ -920,7 +918,7 @@ class Parser:
 			corpo = resultado.registro(self.statements())
 			if resultado.erro: return resultado
 
-			if not self.tok_atual.combinam(TT_PALAVRASCHAVE, 'FIM'):
+			if not self.tok_atual.combinam(TT_PALAVRASCHAVE, ('FIM','fim')):
 				return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,f"Estava esperando 'FIM'"))
 
 			resultado.registrar_avanco()
@@ -1504,12 +1502,46 @@ class FuncaoInstalada(FuncaoBase):
 		return ResultadoDaRT().sucesso(Numero.verdadeiro if e_um_numero else Numero.falso)
 	executar_e_uma_funcao.arg_names = ["valor"]
 
-	def executar_tabela(self, exec_ctx):
-		e_um_numero = isinstance(exec_ctx.tabela_simbolos.obter("valor"), FuncaoBase)
+	def executar_tabela_binario(self, exec_ctx):
+		exp = None
+		comp = exec_ctx.tabela_simbolos.obter("operação").valor.upper()
+		if comp in ["AND","E","&","^"]: exp = '{} and {}'
+		if comp in ["OR","OU","|","v"]: exp = '{} or {}'
+		if comp in ["NAND","NE","!&","!^","~&","~^"]: exp = '1 + (-{} and -{})'
+		if comp in ["NOR","NOU","!|","!v","~|","~v"]: exp = '1 + (-{} or -{})'
+		if comp in ["XOR","XOU"]: exp = '{} ^ {}'
+		if comp in ["XNOR","XNOU"]: exp = '1 + (-{} ^ -{})'
+		if comp in ["CONDICIONAL","->","=>"]: exp = '1 if {} == 1 else 0'
+		if comp in ["BICONDICIONAL","<->","<=>"]: exp = '1 + (-{} ^ -{})'
 
-		if exec_ctx.tabela_simbolos.obter("operação") == "AND":
-			return ResultadoDaRT().sucesso(Numero.verdadeiro if e_um_numero else Numero.falso)
-	executar_tabela.arg_names = ["valor1","valor2","operação"]
+		if exp:
+			for l in range(3,-1,-1):
+				p1 = str(int(l/2))
+				p2 = str(l%2)
+				print(p1 + ' ' + comp + ' ' + p2 + ' = ' + str(int(eval(exp.format(p1,p2)))))
+		return ResultadoDaRT().sucesso(Numero.nulo)
+	executar_tabela_binario.arg_names = ["operação"]
+
+	def executar_tabela_logico(self, exec_ctx):
+		exp = None
+		comp = exec_ctx.tabela_simbolos.obter("operação").valor.upper()
+		if comp in ["AND","E","&","^"]: exp = '{} and {}'
+		if comp in ["OR","OU","|","v"]: exp = '{} or {}'
+		if comp in ["NAND","NE","!&","!^","~&","~^"]: exp = '1 + (-{} and -{})'
+		if comp in ["NOR","NOU","!|","!v","~|","~v"]: exp = '1 + (-{} or -{})'
+		if comp in ["XOR","XOU"]: exp = '{} ^ {}'
+		if comp in ["XNOR","XNOU"]: exp = '1 + (-{} ^ -{})'
+		if comp in ["CONDICIONAL","->","=>"]: exp = '1 if {} == 1 else 0'
+		if comp in ["BICONDICIONAL","<->","<=>"]: exp = '1 + (-{} ^ -{})'
+
+		if exp:
+			for l in range(3,-1,-1):
+				vl = ['F','V']
+				p1 = int(l/2)
+				p2 = l%2
+				print(vl[p1] + ' ' + comp + ' ' + vl[p2] + ' = ' + vl[int(eval(exp.format(p1,p2)))])
+		return ResultadoDaRT().sucesso(Numero.nulo)
+	executar_tabela_logico.arg_names = ["operação"]
 
 	def executar_adicionar(self, exec_ctx):
 		lista = exec_ctx.tabela_simbolos.obter("list")
@@ -1570,7 +1602,7 @@ class FuncaoInstalada(FuncaoBase):
 		return ResultadoDaRT().sucesso(Numero.nulo)
 	executar_obter_data_atual.arg_names = []
 
-	def executar_executar(self, exec_ctx):
+	def executar_abrir(self, exec_ctx):
 		arquivo = exec_ctx.tabela_simbolos.obter("arquivo")
 
 		if not isinstance(arquivo, Texto):
@@ -1587,11 +1619,11 @@ class FuncaoInstalada(FuncaoBase):
 		if erro:
 			return ResultadoDaRT().falha(ErroRT(self.inicio, self.fim,f"Falha ao terminar de executar o script \"{arquivo}\"\n" + erro.como_texto(),exec_ctx))
 		return ResultadoDaRT().sucesso(Numero.nulo)
-	executar_executar.arg_names = ["arquivo"]
+	executar_abrir.arg_names = ["arquivo"]
 
 for i in ('escrever','escrever_ret','ler','ler_inteiro','limpar','pausar','esperar',
-	'e_um_numero','e_um_texto','e_uma_lista','e_uma_funcao','tabela',
-	'adicionar','remover','extender','tamanho','obter_hora_atual','obter_data_atual','executar'):
+	'e_um_numero','e_um_texto','e_uma_lista','e_uma_funcao','tabela_binario','tabela_logico',
+	'adicionar','remover','extender','tamanho','obter_hora_atual','obter_data_atual','abrir'):
 	exec(f'FuncaoInstalada.{i} = FuncaoInstalada("{i}")')
 
 #######################################
@@ -1872,7 +1904,10 @@ for c in range(2):
 	tabela_global_simbolos.criar(eval("'E_UMA_FUNCAO'." + case + "()"), FuncaoInstalada.e_uma_funcao)
 	tabela_global_simbolos.criar(eval("'É_UMA_FUNCÃO'." + case + "()"), FuncaoInstalada.e_uma_funcao)
 	tabela_global_simbolos.criar(eval("'E_UMA_FUNÇAO'." + case + "()"), FuncaoInstalada.e_uma_funcao)
-	tabela_global_simbolos.criar(eval("'TABELA'." + case + "()"), FuncaoInstalada.tabela)
+	tabela_global_simbolos.criar(eval("'TABELA_BINÁRIO'." + case + "()"), FuncaoInstalada.tabela_binario)
+	tabela_global_simbolos.criar(eval("'TABELA_BINARIO'." + case + "()"), FuncaoInstalada.tabela_binario)
+	tabela_global_simbolos.criar(eval("'TABELA_LÓGICO'." + case + "()"), FuncaoInstalada.tabela_logico)
+	tabela_global_simbolos.criar(eval("'TABELA_LOGICO'." + case + "()"), FuncaoInstalada.tabela_logico)
 	tabela_global_simbolos.criar(eval("'ADD'." + case + "()"), FuncaoInstalada.adicionar)
 	tabela_global_simbolos.criar(eval("'ADICIONAR'." + case + "()"), FuncaoInstalada.adicionar)
 	tabela_global_simbolos.criar(eval("'REMOVER'." + case + "()"), FuncaoInstalada.remover)
@@ -1880,14 +1915,13 @@ for c in range(2):
 	tabela_global_simbolos.criar(eval("'TAMANHO'." + case + "()"), FuncaoInstalada.tamanho)
 	tabela_global_simbolos.criar(eval("'OBTER_HORA_ATUAL'." + case + "()"), FuncaoInstalada.obter_hora_atual)
 	tabela_global_simbolos.criar(eval("'OBTER_DATA_ATUAL'." + case + "()"), FuncaoInstalada.obter_data_atual)
-	tabela_global_simbolos.criar(eval("'EXECUTAR'." + case + "()"), FuncaoInstalada.executar)
+	tabela_global_simbolos.criar(eval("'ABRIR'." + case + "()"), FuncaoInstalada.executar)
 
 def executar(arquivo, texto):
 	#CRIAR TOKENS
 	lexer = Lexer(arquivo, texto)
 	tokens, erro = lexer.criar_tokens()
 	if erro: return None, erro
-	print(tokens)
 	
 	#GERAR ÁRVORE DO PARSER
 	parser = Parser(tokens)
