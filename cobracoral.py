@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 #######################################
 # CONSTANTES
 #######################################
@@ -7,12 +8,6 @@ import datetime
 import string
 import time
 import os
-
-ALFABETO = 'abcdefghijklmnopqrstuvwxyz'
-ACENTOS = 'äåæªáãàçâéèêíìîñóòôõúù'
-ALFABETO += ACENTOS + ACENTOS.upper() + ALFABETO.upper()
-DIGITOS = '0123456789'
-ALFANUMERICO = ALFABETO + DIGITOS
 
 #######################################
 # ERROS
@@ -26,24 +21,24 @@ class Erro:
 		self.detalhes = detalhes
 	
 	def como_texto(self):
-		resultado = f'{self.nome_do_erro}: {self.detalhes}\nArquivo {self.inicio.fn}, linha {self.inicio.ln + 1}'
+		resultado = f'{self.nome_do_erro}: {self.detalhes}\n{EM_FILE} {self.inicio.fn}, {EM_LINE} {self.inicio.ln + 1}'
 		return resultado
 
 class ErroDeCaractereIlegal(Erro):
 	def __init__(self, inicio, fim, detalhes):
-		super().__init__(inicio, fim, 'Este caractere não deveria estar aqui', detalhes)
+		super().__init__(inicio, fim, EM_IlegalChar, detalhes)
 
 class ErroDeCaractereEsperado(Erro):
 	def __init__(self, inicio, fim, detalhes):
-		super().__init__(inicio, fim, 'Eu estava esperando outro caractere', detalhes)
+		super().__init__(inicio, fim, EM_ExpectedChar, detalhes)
 
 class ErroDeSintaxe(Erro):
 	def __init__(self, inicio, fim, detalhes):
-		super().__init__(inicio, fim, 'Esta linha não está bem estruturada', detalhes)
+		super().__init__(inicio, fim, EM_Sintax, detalhes)
 
 class ErroRT(Erro):
 	def __init__(self,inicio,fim,detalhes,contexto):
-		super().__init__(inicio, fim, '\tErro de processamento', detalhes)
+		super().__init__(inicio, fim, f'\t{EM_Runtime}', detalhes)
 		self.contexto = contexto
 	
 	def como_texto(self):
@@ -56,11 +51,11 @@ class ErroRT(Erro):
 		ctx = self.contexto
 		
 		while ctx:
-			resultado = f'\tArquivo {pos.fn}, linha {str(pos.ln + 1)} in {ctx.mostrar_nome}\n' + resultado
+			resultado = f'\t{EM_FILE} {pos.fn}, {EM_LINE} {str(pos.ln + 1)} {EM_IN} {ctx.mostrar_nome}\n' + resultado
 			pos = ctx.posicao_do_pai
 			ctx = ctx.pai
 		
-		return 'O caminho de volta: (última linha executada por último):\n' + resultado
+		return EM_Traceback + '\n' + resultado
 			
 #######################################
 # POSIÇÃO
@@ -90,9 +85,6 @@ class Posicao:
 #######################################
 # TOKENS
 #######################################
-
-TT_OPERAÇÕES = {**TT_OPERAÇÕES,**{i[0].lower(): i[1] for i in TT_OPERAÇÕES.items()}}
-TT_PALAVRASCHAVE += [i.lower() for i in TT_PALAVRASCHAVE]
 
 class Token:
 	def __init__(self, tipo, valor=None, inicio=None, fim=None):
@@ -159,7 +151,7 @@ class Lexer:
 			elif self.car_atual in '=': tokens.append(self.fazer_a_ou_b(TT_IGU,TT_EIG,'='))
 			elif self.car_atual in '≠': tokens.append(Token(TT_DIF,inicio=self.pos)); self.avancar()
 			elif self.car_atual in '~!':
-				token, erro = self.fazer_a_ou_b(None,TT_DIF,'=')
+				token, erro = self.fazer_a_ou_b(None,TT_DIF,'=&|')
 				if erro: return [], erro
 				else: tokens.append(token)
 			elif self.car_atual in '>': tokens.append(self.fazer_a_ou_b(TT_MIQ,TT_MIQIGU,'='))
@@ -177,8 +169,8 @@ class Lexer:
 			elif self.car_atual == ')': tokens.append(Token(TT_FECPARENT,inicio=self.pos)); self.avancar()
 			elif self.car_atual == '[': tokens.append(Token(TT_ABRCOLCHE,inicio=self.pos)); self.avancar()
 			elif self.car_atual == ']': tokens.append(Token(TT_FECCOLCHE,inicio=self.pos)); self.avancar()
-			elif self.car_atual == '{': tokens.append(Token(TT_ABRCHAVES,inicio=self.pos)); self.avancar()
-			elif self.car_atual == '}': tokens.append(Token(TT_FECCHAVES,inicio=self.pos)); self.avancar()
+			elif self.car_atual == '{': tokens.append(self.fazer_identificador('ENTÃO')); self.avancar()
+			elif self.car_atual == '}': tokens.append(self.fazer_identificador('FIM')); self.avancar()
 			
 			else:
 				inicio = self.pos.copia()
@@ -228,8 +220,8 @@ class Lexer:
 			id_str += self.car_atual
 			self.avancar()
 
-		if id_str in TT_OPERAÇÕES.keys(): return Token(TT_OPERAÇÕES[id_str], inicio=self.pos)
-		else: return Token(TT_PALAVRASCHAVE if id_str in TT_PALAVRASCHAVE else TT_IDE, id_str, inicio, self.pos)
+		if id_str.upper() in TT_OPERAÇÕES.keys(): return Token(TT_OPERAÇÕES[id_str.upper()], inicio=self.pos)
+		else: return Token(TT_PALAVRASCHAVE if id_str.upper() in TT_PALAVRASCHAVE else TT_IDE, id_str.upper(), inicio, self.pos)
 	
 	def fazer_op_ou_num(self,simbolo):
 		tok_tipo = simbolo
@@ -250,13 +242,19 @@ class Lexer:
 		inicio = self.pos.copia()
 		self.avancar()
 
-		if self.car_atual in simbolos:
+		if self.car_atual and self.car_atual in simbolos:
+			if simbolos == '~!':
+				if self.car_atual == '=': tok_tipo = TT_DIF
+				elif self.car_atual == '&': tok_tipo = 'NE'
+				elif self.car_atual == '|': tok_tipo = 'NOU'
+				else: tok_tipo = b
+			else: tok_tipo = b
 			self.avancar()
-			tok_tipo = b
 
 		if a and b: return Token(tok_tipo, inicio=inicio, fim=self.pos)
+		elif tok_tipo in TT_PALAVRASCHAVE: return self.fazer_identificador(tok_tipo), None
 		elif tok_tipo: return Token(tok_tipo, inicio=inicio, fim=self.pos), None
-		else: self.avancar(); return None, ErroDeCaractereEsperado(inicio, self.pos, f"'{simbolos}' (depois de '{a}')")
+		else: self.avancar(); return None, ErroDeCaractereEsperado(inicio, self.pos, f"'{simbolos}' ({EM_AFTER} '{tok_tipo}')")
 
 	def comentario(self):
 		self.avancar()
@@ -458,7 +456,7 @@ class Parser:
 	def parse(self):
 		resultado = self.statements()
 		if not resultado.erro and self.tok_atual.tipo != TT_FIM:
-			return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,"Token não pode aparecer após tokens anteriores"))
+			return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,EM_Token))
 		return resultado
 
 	def statements(self):
@@ -499,7 +497,7 @@ class Parser:
 		resultado = ResultadoDoParser()
 		inicio = self.tok_atual.inicio.copia()
 
-		if self.tok_atual.combinam(TT_PALAVRASCHAVE, ('RETORNAR','retornar')):
+		if self.tok_atual.combinam(TT_PALAVRASCHAVE, PC_RETORNAR):
 			resultado.registrar_avanco()
 			self.avancar()
 
@@ -507,12 +505,12 @@ class Parser:
 			if not expr: self.reverso(resultado.reverter_contagem)
 			return resultado.sucesso(NodeRetornar(expr, inicio, self.tok_atual.inicio.copia()))
 		
-		if self.tok_atual.combinam(TT_PALAVRASCHAVE, ('CONTINUAR','continuar')):
+		if self.tok_atual.combinam(TT_PALAVRASCHAVE, PC_CONTINUAR):
 			resultado.registrar_avanco()
 			self.avancar()
 			return resultado.sucesso(NodeContinuar(inicio, self.tok_atual.inicio.copia()))
 			
-		if self.tok_atual.combinam(TT_PALAVRASCHAVE, ('QUEBRAR','quebrar')):
+		if self.tok_atual.combinam(TT_PALAVRASCHAVE, PC_QUEBRAR):
 			resultado.registrar_avanco()
 			self.avancar()
 			return resultado.sucesso(NodeQuebrar(inicio, self.tok_atual.inicio.copia()))
@@ -528,19 +526,19 @@ class Parser:
 	def expr(self):
 		resultado = ResultadoDoParser()
 
-		if self.tok_atual.combinam(TT_PALAVRASCHAVE, ('VAR','var')):
+		if self.tok_atual.combinam(TT_PALAVRASCHAVE, PC_VAR):
 			resultado.registrar_avanco()
 			self.avancar()
 
 			if self.tok_atual.tipo != TT_IDE:
-				return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,"Esperava identificador"))
+				return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,EM_Identifier))
 
 			nome = self.tok_atual
 			resultado.registrar_avanco()
 			self.avancar()
 
 			if self.tok_atual.tipo != TT_IGU:
-				return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,"Esperava um '='"))
+				return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,EM_Expected + '='))
 
 			resultado.registrar_avanco()
 			self.avancar()
@@ -555,14 +553,14 @@ class Parser:
 		node = resultado.registro(self.op_bin(self.comp_expr, operacoes_logicas))
 
 		if resultado.erro:
-			return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,"Esperava 'VAR', 'SE', 'PARA', 'ENQUANTO', 'FUNÇÃO', inteiro, real, identificador, '+', '-', '(', '[' ou 'NÃO'"))
+			return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,EM_Expected + "'VAR', 'SE', 'PARA', 'ENQUANTO', 'FUNÇÃO', inteiro, real, identificador, '+', '-', '(', '[' ou 'NÃO'"))
 
 		return resultado.sucesso(node)
 
 	def comp_expr(self):
 		resultado = ResultadoDoParser()
 
-		if self.tok_atual.combinam(TT_PALAVRASCHAVE, ('NÃO','NAO','não','nao')):
+		if self.tok_atual.combinam(TT_PALAVRASCHAVE, PC_NAO):
 			op_tok = self.tok_atual
 			resultado.registrar_avanco()
 			self.avancar()
@@ -574,7 +572,7 @@ class Parser:
 		node = resultado.registro(self.op_bin(self.arith_expr, (TT_EIG, TT_DIF, TT_MNQ, TT_MIQ, TT_MNQIGU, TT_MIQIGU)))
 		
 		if resultado.erro:
-			return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,"Estava esperando um inteiro, real, identificador, '+', '-', '(', '[', 'SE', 'PARA', 'ENQUANTO', 'FUNÇÃO' or 'NÃO'"))
+			return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,EM_Expected + "inteiro, real, identificador, '+', '-', '(', '[', 'SE', 'PARA', 'ENQUANTO', 'FUNÇÃO' or 'NÃO'"))
 		return resultado.sucesso(node)
 
 	def arith_expr(self):
@@ -617,7 +615,7 @@ class Parser:
 				if resultado.erro:
 					return resultado.falha(ErroDeSintaxe(
 						self.tok_atual.inicio, self.tok_atual.fim,
-						"Estava esperando ')', 'VAR', 'SE', 'PARA', 'ENQUANTO', 'FUNÇÃO', inteiro, real, identificador, '+', '-', '(', '[' ou 'NÃO'"
+						EM_Expected + "')', 'VAR', 'SE', 'PARA', 'ENQUANTO', 'FUNÇÃO', inteiro, real, identificador, '+', '-', '(', '[' " + EM_Expected + " 'NÃO'"
 					))
 
 				while self.tok_atual.tipo == TT_VIRGULA:
@@ -628,7 +626,7 @@ class Parser:
 					if resultado.erro: return resultado
 
 				if self.tok_atual.tipo != TT_FECPARENT:
-					return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,f"Esperava ',' ou ')'"))
+					return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,f"{EM_Expected} ',' {EM_OR} ')'"))
 
 				resultado.registrar_avanco()
 				self.avancar()
@@ -663,34 +661,34 @@ class Parser:
 				resultado.registrar_avanco()
 				self.avancar()
 				return resultado.sucesso(expr)
-			else: return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,"Estava esperando um ')'"))
+			else: return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,EM_Expected + "')'"))
 
 		elif tok.tipo == TT_ABRCOLCHE:
 			list_expr = resultado.registro(self.list_expr())
 			if resultado.erro: return resultado
 			return resultado.sucesso(list_expr)
 		
-		elif tok.combinam(TT_PALAVRASCHAVE, ('SE','se')):
+		elif tok.combinam(TT_PALAVRASCHAVE, PC_SE):
 			se_expr = resultado.registro(self.se_expr())
 			if resultado.erro: return resultado
 			return resultado.sucesso(se_expr)
 
-		elif tok.combinam(TT_PALAVRASCHAVE, ('PARA','para')):
+		elif tok.combinam(TT_PALAVRASCHAVE, PC_PARA):
 			para_expr = resultado.registro(self.para_expr())
 			if resultado.erro: return resultado
 			return resultado.sucesso(para_expr)
 
-		elif tok.combinam(TT_PALAVRASCHAVE, ('ENQUANTO','enquanto')):
+		elif tok.combinam(TT_PALAVRASCHAVE, PC_ENQUANTO):
 			enquanto_expr = resultado.registro(self.enquanto_expr())
 			if resultado.erro: return resultado
 			return resultado.sucesso(enquanto_expr)
 
-		elif tok.combinam(TT_PALAVRASCHAVE, ('FUNÇÃO','FUNCÃO','FUNÇAO','FUNCAO','função','funcão','funçao','funcao')):
+		elif tok.combinam(TT_PALAVRASCHAVE, PC_FUNCAO):
 			func_def = resultado.registro(self.func_def())
 			if resultado.erro: return resultado
 			return resultado.sucesso(func_def)
 
-		return resultado.falha(ErroDeSintaxe(tok.inicio, tok.fim,"Estava esperando um inteiro, real, identificador, '+', '-', '(', '[', SE', 'PARA', 'ENQUANTO', 'FUNÇÃO'"))
+		return resultado.falha(ErroDeSintaxe(tok.inicio, tok.fim,EM_Expected + "inteiro, real, identificador, '+', '-', '(', '[', SE', 'PARA', 'ENQUANTO', 'FUNÇÃO'"))
 
 	def list_expr(self):
 		resultado = ResultadoDoParser()
@@ -698,7 +696,7 @@ class Parser:
 		inicio = self.tok_atual.inicio.copia()
 
 		if self.tok_atual.tipo != TT_ABRCOLCHE:
-			return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,f"Esperava '['"))
+			return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,EM_Expected + "'['"))
 
 		resultado.registrar_avanco()
 		self.avancar()
@@ -709,7 +707,7 @@ class Parser:
 		else:
 			element_nodes.append(resultado.registro(self.expr()))
 			if resultado.erro:
-				return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,"Esperava ']', 'VAR', 'IF', 'FOR', 'WHILE', 'FUN', int, float, identifier, '+', '-', '(', '[' or 'NOT'"))
+				return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,EM_Expected + "']', 'VAR', 'IF', 'FOR', 'WHILE', 'FUN', int, float, identifier, '+', '-', '(', '[' or 'NOT'"))
 
 			while self.tok_atual.tipo == TT_VIRGULA:
 				resultado.registrar_avanco()
@@ -719,7 +717,7 @@ class Parser:
 				if resultado.erro: return resultado
 
 			if self.tok_atual.tipo != TT_FECCOLCHE:
-				return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,f"Esperava ',' ou ']'"))
+				return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,EM_Expected + "',' " + EM_OR + " ']'"))
 
 			resultado.registrar_avanco()
 			self.avancar()
@@ -740,7 +738,7 @@ class Parser:
 		resultado = ResultadoDoParser()
 		caso_senao = None
 
-		if self.tok_atual.combinam(TT_PALAVRASCHAVE, ('SENÃO','SENAO','senão','senao')):
+		if self.tok_atual.combinam(TT_PALAVRASCHAVE, PC_SENAO):
 			resultado.registrar_avanco()
 			self.avancar()
 
@@ -752,10 +750,10 @@ class Parser:
 				if resultado.erro: return resultado
 				caso_senao = (statements, True)
 
-				if self.tok_atual.combinam(TT_PALAVRASCHAVE, ('FIM','fim')):
+				if self.tok_atual.combinam(TT_PALAVRASCHAVE, PC_FIM):
 					resultado.registrar_avanco()
 					self.avancar()
-				else: return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,"Estava esperando um 'FIM'"))
+				else: return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,EM_Expected + "'FIM'"))
 			else:
 				expr = resultado.registro(self.statement())
 				if resultado.erro: return resultado
@@ -767,7 +765,7 @@ class Parser:
 		resultado = ResultadoDoParser()
 		casos, caso_senao = [], None
 
-		if self.tok_atual.combinam(TT_PALAVRASCHAVE, ('SENÃOSE','SENAOSE','senãose','senaose')):
+		if self.tok_atual.combinam(TT_PALAVRASCHAVE, PC_SENAOSE):
 			todos_os_casos = resultado.registro(self.se_expr_b())
 			if resultado.erro: return resultado
 			casos, caso_senao = todos_os_casos
@@ -783,7 +781,7 @@ class Parser:
 		caso_senao = None
 
 		if not self.tok_atual.combinam(TT_PALAVRASCHAVE, case_keyword):
-			return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,f"Esperava '{case_keyword}'"))
+			return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,EM_Expected + case_keyword))
 
 		resultado.registrar_avanco()
 		self.avancar()
@@ -791,8 +789,8 @@ class Parser:
 		condicao = resultado.registro(self.expr())
 		if resultado.erro: return resultado
 
-		if not self.tok_atual.combinam(TT_PALAVRASCHAVE, ('ENTÃO','ENTAO','então','entao')):
-			return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,f"Esperava 'ENTÃO'"))
+		if not self.tok_atual.combinam(TT_PALAVRASCHAVE, PC_ENTAO):
+			return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,EM_Expected + "'ENTÃO'"))
 
 		resultado.registrar_avanco()
 		self.avancar()
@@ -805,7 +803,7 @@ class Parser:
 			if resultado.erro: return resultado
 			casos.append((condicao, statements, True))
 
-			if self.tok_atual.combinam(TT_PALAVRASCHAVE, ('FIM','fim')):
+			if self.tok_atual.combinam(TT_PALAVRASCHAVE, PC_FIM):
 				resultado.registrar_avanco()
 				self.avancar()
 			else:
@@ -828,21 +826,21 @@ class Parser:
 	def para_expr(self):
 		resultado = ResultadoDoParser()
 
-		if not self.tok_atual.combinam(TT_PALAVRASCHAVE, ('PARA','para')):
-			return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,f"Esperava 'PARA'"))
+		if not self.tok_atual.combinam(TT_PALAVRASCHAVE, PC_PARA):
+			return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,EM_Expected + "'PARA'"))
 
 		resultado.registrar_avanco()
 		self.avancar()
 
 		if self.tok_atual.tipo != TT_IDE:
-			return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,f"Esperava um identificador"))
+			return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,EM_Identifier))
 
 		nome = self.tok_atual
 		resultado.registrar_avanco()
 		self.avancar()
 
 		if self.tok_atual.tipo != TT_IGU:
-			return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,f"Esperava '='"))
+			return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,EM_Expected + "'='"))
 		
 		resultado.registrar_avanco()
 		self.avancar()
@@ -850,8 +848,8 @@ class Parser:
 		inicio = resultado.registro(self.expr())
 		if resultado.erro: return resultado
 
-		if not self.tok_atual.combinam(TT_PALAVRASCHAVE, ('CADA','cada')):
-			return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,f"Esperava 'CADA'"))
+		if not self.tok_atual.combinam(TT_PALAVRASCHAVE, PC_CADA):
+			return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,EM_Expected + "'CADA'"))
 		
 		resultado.registrar_avanco()
 		self.avancar()
@@ -859,7 +857,7 @@ class Parser:
 		fim = resultado.registro(self.expr())
 		if resultado.erro: return resultado
 
-		if self.tok_atual.combinam(TT_PALAVRASCHAVE, ('PASSO','passo')):
+		if self.tok_atual.combinam(TT_PALAVRASCHAVE, PC_PASSO):
 			resultado.registrar_avanco()
 			self.avancar()
 
@@ -867,8 +865,8 @@ class Parser:
 			if resultado.erro: return resultado
 		else: passo = None
 
-		if not self.tok_atual.combinam(TT_PALAVRASCHAVE, ('ENTÃO','ENTAO','então','entao')):
-			return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,f"Esperava 'ENTÃO'"))
+		if not self.tok_atual.combinam(TT_PALAVRASCHAVE, PC_ENTAO):
+			return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,EM_Expected + "'ENTÃO'"))
 
 		resultado.registrar_avanco()
 		self.avancar()
@@ -880,8 +878,8 @@ class Parser:
 			body = resultado.registro(self.statements())
 			if resultado.erro: return resultado
 
-			if not self.tok_atual.combinam(TT_PALAVRASCHAVE, ('FIM','fim')):
-				return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,f"Esperava 'FIM'"))
+			if not self.tok_atual.combinam(TT_PALAVRASCHAVE, PC_FIM):
+				return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,EM_Expected + "'FIM'"))
 
 			resultado.registrar_avanco()
 			self.avancar()
@@ -896,8 +894,8 @@ class Parser:
 	def enquanto_expr(self):
 		resultado = ResultadoDoParser()
 
-		if not self.tok_atual.combinam(TT_PALAVRASCHAVE, ('ENQUANTO','enquanto')):
-			return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,f"Estava esperando 'ENQUANTO'"))
+		if not self.tok_atual.combinam(TT_PALAVRASCHAVE, PC_ENQUANTO):
+			return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,EM_Expected + "'ENQUANTO'"))
 
 		resultado.registrar_avanco()
 		self.avancar()
@@ -905,8 +903,8 @@ class Parser:
 		condicao = resultado.registro(self.expr())
 		if resultado.erro: return resultado
 
-		if not self.tok_atual.combinam(TT_PALAVRASCHAVE, ('ENTÃO','ENTAO','então','entao')):
-			return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,f"Estava esperando 'ENTÃO'"))
+		if not self.tok_atual.combinam(TT_PALAVRASCHAVE, PC_ENTAO):
+			return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,EM_Expected + "'ENTÃO'"))
 
 		resultado.registrar_avanco()
 		self.avancar()
@@ -918,8 +916,8 @@ class Parser:
 			corpo = resultado.registro(self.statements())
 			if resultado.erro: return resultado
 
-			if not self.tok_atual.combinam(TT_PALAVRASCHAVE, ('FIM','fim')):
-				return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,f"Estava esperando 'FIM'"))
+			if not self.tok_atual.combinam(TT_PALAVRASCHAVE, PC_FIM):
+				return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,EM_Expected + "'FIM'"))
 
 			resultado.registrar_avanco()
 			self.avancar()
@@ -934,24 +932,24 @@ class Parser:
 	def func_def(self):
 		resultado = ResultadoDoParser()
 
-		if not self.tok_atual.combinam(TT_PALAVRASCHAVE, ('FUNÇÃO','FUNCAO','FUNÇAO','FUNCÃO','função','funcao','funçao','funcão')):
-			return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,f"Esperava 'FUNÇÃO'"))
+		if not self.tok_atual.combinam(TT_PALAVRASCHAVE, PC_FUNCAO):
+			return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,EM_Expected + "'FUNÇÃO'"))
 
 		resultado.registrar_avanco()
 		self.avancar()
 
 		if self.tok_atual.valor in FuncaoInstalada.__dict__.keys():
-			return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,f"Você não pode substituir uma função instalada!"))
+			return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,EM_BuiltinFunc))
 		elif self.tok_atual.tipo == TT_IDE:
 			nome = self.tok_atual
 			resultado.registrar_avanco()
 			self.avancar()
 			if self.tok_atual.tipo != TT_ABRPARENT:
-				return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,f"Estava esperando um '('"))
+				return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,EM_Expected + "'('"))
 		else:
 			nome = None
 			if self.tok_atual.tipo != TT_ABRPARENT:
-				return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,f"Estava esperando um identificador ou um '('"))
+				return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,EM_Identifier + " " + EM_OR + " um '('"))
 		
 		resultado.registrar_avanco()
 		self.avancar()
@@ -967,17 +965,17 @@ class Parser:
 				self.avancar()
 
 				if self.tok_atual.tipo != TT_IDE:
-					return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,f"Estava esperando um identificador"))
+					return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,EM_Identifier))
 
 				arg_name_toks.append(self.tok_atual)
 				resultado.registrar_avanco()
 				self.avancar()
 			
 			if self.tok_atual.tipo != TT_FECPARENT:
-				return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,f"Estava esperando uma ',' ou um ')'"))
+				return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,EM_Expected + "',' " + EM_OR + " um ')'"))
 		else:
 			if self.tok_atual.tipo != TT_FECPARENT:
-				return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,f"Estava esperando um identificador ou um ')'"))
+				return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,EM_Expected + " " + EM_OR + " um ')'"))
 
 		resultado.registrar_avanco()
 		self.avancar()
@@ -992,7 +990,7 @@ class Parser:
 			return resultado.sucesso(NodeFuncao(nome,arg_name_toks,corpo,True))
 		
 		if self.tok_atual.tipo != TT_NOVALINHA:
-			return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,f"Estava esperando '=' ou NOVALINHA"))
+			return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,EM_Expected + "'=' " + EM_OR + " NOVALINHA"))
 
 		resultado.registrar_avanco()
 		self.avancar()
@@ -1000,15 +998,13 @@ class Parser:
 		corpo = resultado.registro(self.statements())
 		if resultado.erro: return resultado
 
-		if not self.tok_atual.matches(TT_PALAVRASCHAVE, ('FIM','fim')):
-			return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,f"Estava esperando um 'FIM'"))
+		if not self.tok_atual.combinam(TT_PALAVRASCHAVE, PC_FIM):
+			return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,EM_Expected + "'FIM'"))
 
 		resultado.registrar_avanco()
 		self.avancar()
 		
 		return resultado.sucesso(NodeFuncao(nome,arg_name_toks,corpo,False))
-
-	###################################
 
 	def op_bin(self, func_a, ops, func_b=None):
 		if func_b == None: func_b = func_a
@@ -1099,7 +1095,7 @@ class Valor:
 		return ResultadoDaRT().falha(self.operacao_ilegal())
 
 	def copia(self):
-		raise Exception('Nenhum método de cópia definido.')
+		raise Exception(EM_Copy)
 
 	def e_verdade(self):
 		return False
@@ -1109,7 +1105,7 @@ class Valor:
 
 	def operacao_ilegal(self, outro=None):
 		if not outro: outro = self
-		return ErroRT(self.inicio, outro.fim,'Operação Ilegal',self.contexto)
+		return ErroRT(self.inicio, outro.fim,EM_IlegalOp,self.contexto)
 
 for i in ('mais','subtraido_por','multiplicado_por','dividido_por','resto','elevado_a','radiciacao',
 	'intersecao_de','pertence_a','nao_pertence_a',
@@ -1126,6 +1122,8 @@ class Numero(Valor):
 	def mais(self, outro):
 		if isinstance(outro, Numero):
 			return Numero(self.valor + outro.valor).fazer_contexto(self.contexto), None
+		elif isinstance(outro, Texto):
+			return Numero(str(self.valor) + outro.valor).fazer_contexto(self.contexto), None
 		else: return None, Valor.operacao_ilegal(self, outro)
 
 	def subtraido_por(self, outro):
@@ -1141,7 +1139,7 @@ class Numero(Valor):
 	def dividido_por(self, outro):
 		if isinstance(outro, Numero):
 			if outro.valor == 0:
-				return None, ErroRT(outro.inicio, outro.fim,'Você não sabe que é impossível dividir por zero??',self.contexto)
+				return None, ErroRT(outro.inicio, outro.fim,EM_ZeroDiv,self.contexto)
 			return Numero(self.valor / outro.valor).fazer_contexto(self.contexto), None
 		else: return None, Valor.operacao_ilegal(self, outro)
 
@@ -1163,41 +1161,57 @@ class Numero(Valor):
 	def comparar_igualdade(self, outro):
 		if isinstance(outro, Numero):
 			return Numero(bool(self.valor == outro.valor)).fazer_contexto(self.contexto), None
-		else: return None, Valor.operacao_ilegal(self, outro)
+		else: return Numero(False).fazer_contexto(self.contexto), None
 
 	def comparar_diferenca(self, outro):
 		if isinstance(outro, Numero):
 			return Numero(bool(self.valor != outro.valor)).fazer_contexto(self.contexto), None
-		else: return None, Valor.operacao_ilegal(self, outro)
+		else: return Numero(True).fazer_contexto(self.contexto), None
 
 	def comparar_menor_que(self, outro):
 		if isinstance(outro, Numero):
 			return Numero(bool(self.valor < outro.valor)).fazer_contexto(self.contexto), None
+		elif isinstance(outro, Texto):
+			return Numero(bool(self.valor < len(outro.valor))).fazer_contexto(self.contexto), None
+		elif isinstance(outro, Lista):
+			return Numero(bool(self.valor < len(outro.elementos))).fazer_contexto(self.contexto), None
 		else: return None, Valor.operacao_ilegal(self, outro)
 
 	def comparar_maior_que(self, outro):
 		if isinstance(outro, Numero):
 			return Numero(bool(self.valor > outro.valor)).fazer_contexto(self.contexto), None
+		elif isinstance(outro, Texto):
+			return Numero(bool(self.valor > len(outro.valor))).fazer_contexto(self.contexto), None
+		elif isinstance(outro, Lista):
+			return Numero(bool(self.valor > len(outro.elementos))).fazer_contexto(self.contexto), None
 		else: return None, Valor.operacao_ilegal(self, outro)
 
 	def comparar_menor_igual_que(self, outro):
 		if isinstance(outro, Numero):
 			return Numero(bool(self.valor <= outro.valor)).fazer_contexto(self.contexto), None
+		elif isinstance(outro, Texto):
+			return Numero(bool(self.valor <= len(outro.valor))).fazer_contexto(self.contexto), None
+		elif isinstance(outro, Lista):
+			return Numero(bool(self.valor <= len(outro.elementos))).fazer_contexto(self.contexto), None
 		else: return None, Valor.operacao_ilegal(self, outro)
 
 	def comparar_maior_igual_que(self, outro):
 		if isinstance(outro, Numero):
 			return Numero(bool(self.valor >= outro.valor)).fazer_contexto(self.contexto), None
+		elif isinstance(outro, Texto):
+			return Numero(bool(self.valor >= len(outro.valor))).fazer_contexto(self.contexto), None
+		elif isinstance(outro, Lista):
+			return Numero(bool(self.valor >= len(outro.elementos))).fazer_contexto(self.contexto), None
 		else: return None, Valor.operacao_ilegal(self, outro)
 
 	def pertence_a(self, outro):
 		if isinstance(outro, Lista):
-			return Numero(int(self.valor in outro.elementos)).fazer_contexto(self.contexto), None
+			return Numero(bool(self.valor in outro.elementos)).fazer_contexto(self.contexto), None
 		else: return None, Valor.operacao_ilegal(self, outro)
 
 	def nao_pertence_a(self, outro):
 		if isinstance(outro, Lista):
-			return Numero(int(self.valor not in outro.elementos)).fazer_contexto(self.contexto), None
+			return Numero(bool(self.valor not in outro.elementos)).fazer_contexto(self.contexto), None
 		else: return None, Valor.operacao_ilegal(self, outro)
 
 	def comparar_negacao(self):
@@ -1205,42 +1219,42 @@ class Numero(Valor):
 
 	def comparar_AND(self, outro):
 		if isinstance(outro, Numero):
-			return Numero(bool(self.valor and outro.valor)).fazer_contexto(self.contexto), None
+			return Numero(True if (self.valor and outro.valor) > 0 else False).fazer_contexto(self.contexto), None
 		else: return None, Valor.operacao_ilegal(self, outro)
 
 	def comparar_OR(self, outro):
 		if isinstance(outro, Numero):
-			return Numero(bool(self.valor or outro.valor)).fazer_contexto(self.contexto), None
+			return Numero(True if (self.valor or outro.valor) > 0 else False).fazer_contexto(self.contexto), None
 		else: return None, Valor.operacao_ilegal(self, outro)
 
 	def comparar_NAND(self, outro):
 		if isinstance(outro, Numero):
-			return Numero(bool((-self.valor and -outro.valor) + 1)).fazer_contexto(self.contexto), None
+			return Numero(True if ((-self.valor and -outro.valor) + 1) > 0 else False).fazer_contexto(self.contexto), None
 		else: return None, Valor.operacao_ilegal(self, outro)
 
 	def comparar_NOR(self, outro):
 		if isinstance(outro, Numero):
-			return Numero(bool((-self.valor or -outro.valor) + 1)).fazer_contexto(self.contexto), None
+			return Numero(True if ((-self.valor or -outro.valor) + 1) > 0 else False).fazer_contexto(self.contexto), None
 		else: return None, Valor.operacao_ilegal(self, outro)
 
 	def comparar_XOR(self, outro):
 		if isinstance(outro, Numero):
-			return Numero(bool(self.valor ^ outro.valor)).fazer_contexto(self.contexto), None
+			return Numero(True if (self.valor ^ outro.valor) > 0 else False).fazer_contexto(self.contexto), None
 		else: return None, Valor.operacao_ilegal(self, outro)
 
 	def comparar_XNOR(self, outro):
 		if isinstance(outro, Numero):
-			return Numero(bool(-self.valor ^ -outro.valor)).fazer_contexto(self.contexto), None
+			return Numero(True if (-self.valor ^ -outro.valor) > 0 else False).fazer_contexto(self.contexto), None
 		else: return None, Valor.operacao_ilegal(self, outro)
 
 	def comparar_condicional(self, outro):
 		if isinstance(outro, Numero):
-			return Numero(int(self.valor or outro.valor)).fazer_contexto(self.contexto), None
+			return Numero(True if (self.valor or outro.valor) > 0 else False).fazer_contexto(self.contexto), None
 		else: return None, Valor.operacao_ilegal(self, outro)
 
 	def comparar_bicondicional(self, outro):
 		if isinstance(outro, Numero):
-			return Numero(int(self.valor or outro.valor)).fazer_contexto(self.contexto), None
+			return Numero(True if (self.valor or outro.valor) > 0 else False).fazer_contexto(self.contexto), None
 		else: return None, Valor.operacao_ilegal(self, outro)
 
 	def copia(self):
@@ -1255,11 +1269,6 @@ class Numero(Valor):
 	
 	def __repr__(self): return str(self.valor)
 
-Numero.nulo = Numero(0)
-Numero.falso = Numero(0)
-Numero.verdadeiro = Numero(1)
-Numero.pi = Numero(3.14)
-
 class Texto(Valor):
 	def __init__(self, valor):
 		super().__init__()
@@ -1268,11 +1277,65 @@ class Texto(Valor):
 	def mais(self, outro):
 		if isinstance(outro, Texto):
 			return Texto(self.valor + outro.valor).fazer_contexto(self.contexto), None
+		elif isinstance(outro, Numero):
+			return Texto(self.valor + str(outro.valor)).fazer_contexto(self.contexto), None
+		else: return None, Valor.operacao_ilegal(self, outro)
+
+	def subtraido_por(self, outro):
+		if isinstance(outro, Numero):
+			lmt = -outro.valor if outro.valor > 0 else len(self.valor)
+			return Texto(self.valor[0:lmt]).fazer_contexto(self.contexto), None
 		else: return None, Valor.operacao_ilegal(self, outro)
 
 	def multiplicado_por(self, outro):
 		if isinstance(outro, Numero):
 			return Texto(self.valor * outro.valor).fazer_contexto(self.contexto), None
+		else: return None, Valor.operacao_ilegal(self, outro)
+
+	def comparar_igualdade(self, outro):
+		if isinstance(outro, Texto):
+			return Numero(bool(self.valor == outro.valor)).fazer_contexto(self.contexto), None
+		else: return Numero(False).fazer_contexto(self.contexto), None
+
+	def comparar_diferenca(self, outro):
+		if isinstance(outro, Texto):
+			return Numero(bool(self.valor != outro.valor)).fazer_contexto(self.contexto), None
+		else: return Numero(True).fazer_contexto(self.contexto), None
+
+	def comparar_menor_que(self, outro):
+		if isinstance(outro, Numero):
+			return Numero(bool(len(self.valor) < outro.valor)).fazer_contexto(self.contexto), None
+		elif isinstance(outro, Texto):
+			return Numero(bool(len(self.valor) < len(outro.valor))).fazer_contexto(self.contexto), None
+		elif isinstance(outro, Lista):
+			return Numero(bool(len(self.valor) < len(outro.elementos))).fazer_contexto(self.contexto), None
+		else: return None, Valor.operacao_ilegal(self, outro)
+
+	def comparar_maior_que(self, outro):
+		if isinstance(outro, Numero):
+			return Numero(bool(len(self.valor) > outro.valor)).fazer_contexto(self.contexto), None
+		elif isinstance(outro, Texto):
+			return Numero(bool(len(self.valor) > len(outro.valor))).fazer_contexto(self.contexto), None
+		elif isinstance(outro, Lista):
+			return Numero(bool(len(self.valor) > len(outro.elementos))).fazer_contexto(self.contexto), None
+		else: return None, Valor.operacao_ilegal(self, outro)
+
+	def comparar_menor_igual_que(self, outro):
+		if isinstance(outro, Numero):
+			return Numero(bool(len(self.valor) <= outro.valor)).fazer_contexto(self.contexto), None
+		elif isinstance(outro, Texto):
+			return Numero(bool(len(self.valor) <= len(outro.valor))).fazer_contexto(self.contexto), None
+		elif isinstance(outro, Lista):
+			return Numero(bool(len(self.valor) <= len(outro.elementos))).fazer_contexto(self.contexto), None
+		else: return None, Valor.operacao_ilegal(self, outro)
+
+	def comparar_maior_igual_que(self, outro):
+		if isinstance(outro, Numero):
+			return Numero(bool(len(self.valor) >= outro.valor)).fazer_contexto(self.contexto), None
+		elif isinstance(outro, Texto):
+			return Numero(bool(len(self.valor) >= len(outro.valor))).fazer_contexto(self.contexto), None
+		elif isinstance(outro, Lista):
+			return Numero(bool(len(self.valor) >= len(outro.elementos))).fazer_contexto(self.contexto), None
 		else: return None, Valor.operacao_ilegal(self, outro)
 
 	def e_verdade(self):
@@ -1305,7 +1368,7 @@ class Lista(Valor):
 				nova_lista.elementos.pop(outro.valor)
 				return nova_lista, None
 			except:
-				return None, ErroRT(outro.inicio, outro.fim,'Element at this index could not be removed from list because index is out of bounds',self.contexto)
+				return None, ErroRT(outro.inicio, outro.fim,EM_ListBounds,self.contexto)
 		else: return None, Valor.operacao_ilegal(self, outro)
 
 	def multiplicado_por(self, outro):
@@ -1320,7 +1383,53 @@ class Lista(Valor):
 			try:
 				return self.elementos[outro.valor], None
 			except:
-				return None, ErroRT(outro.inicio, outro.fim,'Element at this index could not be retrieved from list because index is out of bounds',self.contexto)
+				return None, ErroRT(outro.inicio, outro.fim,EM_ListBounds,self.contexto)
+		else: return None, Valor.operacao_ilegal(self, outro)
+
+	def comparar_igualdade(self, outro):
+		if isinstance(outro, Lista):
+			return Numero(bool(self.elementos == outro.elementos)).fazer_contexto(self.contexto), None
+		else: return Numero(False).fazer_contexto(self.contexto), None
+
+	def comparar_diferenca(self, outro):
+		if isinstance(outro, Lista):
+			return Numero(bool(self.elementos != outro.elementos)).fazer_contexto(self.contexto), None
+		else: return Numero(True).fazer_contexto(self.contexto), None
+
+	def comparar_menor_que(self, outro):
+		if isinstance(outro, Numero):
+			return Numero(bool(len(self.elementos) < outro.valor)).fazer_contexto(self.contexto), None
+		elif isinstance(outro, Texto):
+			return Numero(bool(len(self.elementos) < len(outro.valor))).fazer_contexto(self.contexto), None
+		elif isinstance(outro, Lista):
+			return Numero(bool(len(self.elementos) < len(outro.elementos))).fazer_contexto(self.contexto), None
+		else: return None, Valor.operacao_ilegal(self, outro)
+
+	def comparar_maior_que(self, outro):
+		if isinstance(outro, Numero):
+			return Numero(bool(len(self.elementos) > outro.valor)).fazer_contexto(self.contexto), None
+		elif isinstance(outro, Texto):
+			return Numero(bool(len(self.elementos) > len(outro.valor))).fazer_contexto(self.contexto), None
+		elif isinstance(outro, Lista):
+			return Numero(bool(len(self.elementos) > len(outro.elementos))).fazer_contexto(self.contexto), None
+		else: return None, Valor.operacao_ilegal(self, outro)
+
+	def comparar_menor_igual_que(self, outro):
+		if isinstance(outro, Numero):
+			return Numero(bool(len(self.elementos) <= outro.valor)).fazer_contexto(self.contexto), None
+		elif isinstance(outro, Texto):
+			return Numero(bool(len(self.elementos) <= len(outro.valor))).fazer_contexto(self.contexto), None
+		elif isinstance(outro, Lista):
+			return Numero(bool(len(self.elementos) <= len(outro.elementos))).fazer_contexto(self.contexto), None
+		else: return None, Valor.operacao_ilegal(self, outro)
+
+	def comparar_maior_igual_que(self, outro):
+		if isinstance(outro, Numero):
+			return Numero(bool(len(self.elementos) >= outro.valor)).fazer_contexto(self.contexto), None
+		elif isinstance(outro, Texto):
+			return Numero(bool(len(self.elementos) >= len(outro.valor))).fazer_contexto(self.contexto), None
+		elif isinstance(outro, Lista):
+			return Numero(bool(len(self.elementos) >= len(outro.elementos))).fazer_contexto(self.contexto), None
 		else: return None, Valor.operacao_ilegal(self, outro)
 
 	def intersecao_de(self, outro):
@@ -1348,6 +1457,11 @@ class Lista(Valor):
 
 	def __repr__(self): return f'[{", ".join([repr(x) for x in self.elementos])}]'
 
+Numero.nulo = Numero(0)
+Numero.falso = Numero(0)
+Numero.verdadeiro = Numero(1)
+Numero.pi = Numero(3.14)
+
 #######################################
 # FUNÇÕES
 #######################################
@@ -1355,7 +1469,7 @@ class Lista(Valor):
 class FuncaoBase(Valor):
 	def __init__(self, nome):
 		super().__init__()
-		self.nome = nome or "<anônimo>"
+		self.nome = nome or REPR_FUNC
 
 	def gerar_novo_contexto(self):
 		novo_contexto = Contexto(self.nome, self.contexto, self.inicio)
@@ -1366,10 +1480,10 @@ class FuncaoBase(Valor):
 		resultado = ResultadoDaRT()
 
 		if len(argumentos) > len(nomes):
-			return resultado.falha(ErroRT(self.inicio, self.fim,f"{len(argumentos) - len(nomes)} tem argumentos demais sendo passados para \"{self.nome}\"",self.contexto))
+			return resultado.falha(ErroRT(self.inicio, self.fim,f"{len(argumentos) - len(nomes)} {EM_ArgsMuch} \"{self.nome}\"",self.contexto))
 		
 		if len(argumentos) < len(nomes):
-			return resultado.falha(ErroRT(self.inicio, self.fim,f"{len(nomes) - len(argumentos)} tem poucos argumentos sendo passados para \"{self.nome}\"",self.contexto))
+			return resultado.falha(ErroRT(self.inicio, self.fim,f"{len(nomes) - len(argumentos)} {EM_ArgsFew} \"{self.nome}\"",self.contexto))
 
 		return resultado.sucesso(None)
 
@@ -1415,14 +1529,14 @@ class Funcao(FuncaoBase):
 		return copia
 	
 	def __repr__(self):
-		return f'<função {self.nome}>'
+		return REPR_FUNC.format(self.nome)
 
 class FuncaoInstalada(FuncaoBase):
 	def __init__(self, nome):
 		super().__init__(nome)
 
 	def __repr__(self):
-		return f"<função instalada {self.nome.upper()}>"
+		return REPR_BUILTIN.format(self.nome.upper())
 
 	def executar(self, args):
 		resultado = ResultadoDaRT()
@@ -1437,7 +1551,7 @@ class FuncaoInstalada(FuncaoBase):
 		return resultado.sucesso(return_value)
 	
 	def no_visit_method(self, node, contexto):
-		raise Exception(f'Nenhuma função \"executar_{self.nome}\" foi definida.')
+		raise Exception(EM_NoFunc.format('executar_' + self.nome))
 
 	def copia(self):
 		copia = FuncaoInstalada(self.nome)
@@ -1463,7 +1577,7 @@ class FuncaoInstalada(FuncaoBase):
 		while True:
 			texto = input()
 			try: number = int(texto); break
-			except ValueError: print(f"'{texto}' precisa ser um número do tipo inteiro!")
+			except ValueError: print(EM_MustInt)
 		return ResultadoDaRT().sucesso(Numero(number))
 	executar_ler_inteiro.arg_names = []
 
@@ -1548,7 +1662,7 @@ class FuncaoInstalada(FuncaoBase):
 		valor = exec_ctx.tabela_simbolos.obter("valor")
 
 		if not isinstance(lista, Lista):
-			return ResultadoDaRT().falha(ErroRT(self.inicio, self.fim,"O primeiro argumento precisa ser uma lista",exec_ctx))
+			return ResultadoDaRT().falha(ErroRT(self.inicio, self.fim,EM_FirstArgList,exec_ctx))
 
 		lista.elementos.append(valor)
 		return ResultadoDaRT().sucesso(Numero.nulo)
@@ -1558,15 +1672,13 @@ class FuncaoInstalada(FuncaoBase):
 		lista = exec_ctx.tabela_simbolos.obter("list")
 		index = exec_ctx.tabela_simbolos.obter("index")
 
-		if not isinstance(lista, Lista):
-			return ResultadoDaRT().falha(ErroRT(self.inicio, self.fim,"O primeiro argumento precisa ser uma lista",exec_ctx))
-		if not isinstance(index, Numero):
-			return ResultadoDaRT().falha(ErroRT(self.inicio, self.fim,"O segundo argumento também precisa ser uma lista",exec_ctx))
+		if not isinstance(lista, Lista): return ResultadoDaRT().falha(ErroRT(self.inicio, self.fim,EM_FirstArgList,exec_ctx))
+		if not isinstance(index, Numero): return ResultadoDaRT().falha(ErroRT(self.inicio, self.fim,EM_SecoArgNum,exec_ctx))
 
 		try:
 			element = lista.elementos.pop(index.valor)
 		except:
-			return ResultadoDaRT().falha(ErroRT(self.inicio, self.fim,'Element at this index could not be removed from list because index is out of bounds',exec_ctx))
+			return ResultadoDaRT().falha(ErroRT(self.inicio, self.fim,EM_ListBounds,exec_ctx))
 		return ResultadoDaRT().sucesso(element)
 	executar_remover.arg_names = ["list", "index"]
 
@@ -1575,10 +1687,10 @@ class FuncaoInstalada(FuncaoBase):
 		listB = exec_ctx.tabela_simbolos.obter("listB")
 
 		if not isinstance(listA, List):
-			return ResultadoDaRT().falha(ErroRT(self.inicio, self.fim,"O primeiro argumento precisa ser uma lista",exec_ctx))
+			return ResultadoDaRT().falha(ErroRT(self.inicio, self.fim,EM_FirstArgList,exec_ctx))
 
 		if not isinstance(listB, List):
-			return ResultadoDaRT().falha(ErroRT(self.inicio, self.fim,"O segundo argumento também precisa ser uma lista",exec_ctx))
+			return ResultadoDaRT().falha(ErroRT(self.inicio, self.fim,EM_SecoArgList,exec_ctx))
 
 		listA.elementos.extend(listB.elementos)
 		return ResultadoDaRT().sucesso(Numero.nulo)
@@ -1588,7 +1700,7 @@ class FuncaoInstalada(FuncaoBase):
 		lista = exec_ctx.tabela_simbolos.obter("lista")
 
 		if not isinstance(lista, Lista):
-			return ResultadoDaRT().falha(ErroRT(self.inicio, self.fim,"Argumento precisa ser uma lista",exec_ctx))
+			return ResultadoDaRT().falha(ErroRT(self.inicio, self.fim,EM_FirstArgList,exec_ctx))
 		return ResultadoDaRT().sucesso(Numero(len(lista.elementos)))
 	executar_tamanho.arg_names = ["list"]
 
@@ -1606,18 +1718,17 @@ class FuncaoInstalada(FuncaoBase):
 		arquivo = exec_ctx.tabela_simbolos.obter("arquivo")
 
 		if not isinstance(arquivo, Texto):
-			return ResultadoDaRT().falha(ErroRT(self.inicio, self.fim,"Argumento deve ser o caminho para o arquivo em texto",exec_ctx))
+			return ResultadoDaRT().falha(ErroRT(self.inicio, self.fim,EM_FirstArgPath,exec_ctx))
 
 		arquivo = arquivo.valor
 
 		try:
 			with open(arquivo, "r") as f: script = f.read()
 		except Exception as e:
-			return ResultadoDaRT().falha(ErroRT(self.inicio, self.fim,f"Falha ao carregar o script \"{arquivo}\"\n" + str(e),exec_ctx))
+			return ResultadoDaRT().falha(ErroRT(self.inicio, self.fim,EM_ScriptLoad.format(arquivo) + "\n" + str(e),exec_ctx))
 		_, erro = executar(arquivo, script)
 		
-		if erro:
-			return ResultadoDaRT().falha(ErroRT(self.inicio, self.fim,f"Falha ao terminar de executar o script \"{arquivo}\"\n" + erro.como_texto(),exec_ctx))
+		if erro: return ResultadoDaRT().falha(ErroRT(self.inicio, self.fim,EM_ScriptFinish.format(arquivo) + "\n" + erro.como_texto(),exec_ctx))
 		return ResultadoDaRT().sucesso(Numero.nulo)
 	executar_abrir.arg_names = ["arquivo"]
 
@@ -1669,7 +1780,7 @@ class Interpretador:
 		return method(node, contexto)
 
 	def no_visit_method(self, node, contexto):
-		raise Exception(f'Nenhuma função "visitar_{type(node).__name__}" foi definida')
+		raise Exception(EM_NoFunc.format("visitar_" + type(node).__name__))
 
 	###################################
 
@@ -1693,7 +1804,7 @@ class Interpretador:
 		resultado = ResultadoDaRT()
 		nome = node.nome.valor
 		valor = contexto.tabela_simbolos.obter(nome)
-		if not valor: return resultado.falha(ErroRT(node.inicio, node.fim,f"Não existe nenhuma variável chamada \"{nome}\".",contexto))
+		if not valor: return resultado.falha(ErroRT(node.inicio, node.fim,EM_NoVar.format(nome),contexto))
 		valor = valor.copia().fazer_posicao(node.inicio, node.fim).fazer_contexto(contexto)
 		return resultado.sucesso(valor)
 
@@ -1779,9 +1890,7 @@ class Interpretador:
 		while True:
 			condicao = resultado.registro(self.visitar(node.node_condicao, contexto))
 			if resultado.deve_retornar(): return resultado
-
-			if not condicao.is_true():
-				break
+			if not condicao.e_verdade(): break
 
 			valor = resultado.registro(self.visitar(node.node_corpo, contexto))
 			if resultado.deve_retornar() and resultado.loop_deve_continuar == False and resultado.loop_deve_quebrar == False: return resultado
