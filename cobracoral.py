@@ -4,59 +4,12 @@
 #######################################
 
 from keywords_PT import *
+from erros import *
+
 import datetime
-import string
 import time
 import os
 
-#######################################
-# ERROS
-#######################################
-
-class Erro:
-	def __init__(self, inicio, fim, nome_do_erro, detalhes):
-		self.inicio = inicio
-		self.fim = fim
-		self.nome_do_erro = nome_do_erro
-		self.detalhes = detalhes
-	
-	def como_texto(self):
-		resultado = f'{self.nome_do_erro}: {self.detalhes}\n{EM_FILE} {self.inicio.fn}, {EM_LINE} {self.inicio.ln + 1}'
-		return resultado
-
-class ErroDeCaractereIlegal(Erro):
-	def __init__(self, inicio, fim, detalhes):
-		super().__init__(inicio, fim, EM_IlegalChar, detalhes)
-
-class ErroDeCaractereEsperado(Erro):
-	def __init__(self, inicio, fim, detalhes):
-		super().__init__(inicio, fim, EM_ExpectedChar, detalhes)
-
-class ErroDeSintaxe(Erro):
-	def __init__(self, inicio, fim, detalhes):
-		super().__init__(inicio, fim, EM_Sintax, detalhes)
-
-class ErroRT(Erro):
-	def __init__(self,inicio,fim,detalhes,contexto):
-		super().__init__(inicio, fim, f'\t{EM_Runtime}', detalhes)
-		self.contexto = contexto
-	
-	def como_texto(self):
-		resultado = self.gerar_traceback() + f'{self.nome_do_erro}: {self.detalhes}\n'
-		return resultado
-		
-	def gerar_traceback(self):
-		resultado = ''
-		pos = self.inicio
-		ctx = self.contexto
-		
-		while ctx:
-			resultado = f'\t{EM_FILE} {pos.fn}, {EM_LINE} {str(pos.ln + 1)} {EM_IN} {ctx.mostrar_nome}\n' + resultado
-			pos = ctx.posicao_do_pai
-			ctx = ctx.pai
-		
-		return EM_Traceback + '\n' + resultado
-			
 #######################################
 # POSIÇÃO
 #######################################
@@ -260,141 +213,8 @@ class Lexer:
 		self.avancar()
 		while self.car_atual != '\n' and self.pos.idx < len(self.texto): self.avancar()
 		self.avancar()
-		
-#######################################
-# NODES
-#######################################
 
-class NodeNumero:
-	def __init__(self,token):
-		self.token = token
-		self.inicio = token.inicio
-		self.fim = token.fim
-	
-	def __repr__(self):
-		return self.token
-		
-class NodeTexto:
-	def __init__(self,token):
-		self.token = token
-		self.inicio = token.inicio
-		self.fim = token.fim
-	
-	def __repr__(self):
-		return self.token
-
-class NodeLista:
-	def __init__(self,elementos,inicio,fim):
-		self.elementos = elementos
-		self.inicio = inicio
-		self.fim = fim
-	
-	def __repr__(self):
-		return self.elementos
-
-class NodeVariavelAcesso:
-	def __init__(self,nome):
-		self.nome = nome
-		self.inicio = nome.inicio
-		self.fim = nome.fim
-	
-	def __repr__(self):
-		return self.nome
-
-class NodeVariavelAssimilar:
-	def __init__(self,nome,valor):
-		self.nome = nome
-		self.valor = valor
-		self.inicio = nome.inicio
-		self.fim = valor.fim
-	
-	def __repr__(self):
-		return self.nome
-
-class NodeOpUni:
-	def __init__(self,tok_op,node):
-		self.tok_op = tok_op
-		self.node = node
-		self.inicio = tok_op.inicio
-		self.fim = node.fim
-		
-	def __repr__(self):
-		return f'({self.tok_op},{self.node})'
-
-class NodeOpBin:
-	def __init__(self,esquerdo,tok_op,direito):
-		self.node_esquerdo = esquerdo
-		self.tok_op = tok_op
-		self.node_direito = direito
-		self.inicio = esquerdo.inicio
-		self.fim = direito.fim
-		
-	def __repr__(self):
-		return f'({self.node_esquerdo},{self.tok_op},{self.node_direito})'
-
-class NodeSe:
-	def __init__(self, casos, senao):
-		self.casos = casos
-		self.senao = senao
-		self.inicio = self.casos[0][0].inicio
-		self.fim = (self.senao or self.casos[len(self.casos) - 1])[0].fim
-
-class NodeEnquanto:
-	def __init__(self, node_condicao, node_corpo, retornar_automaticamente):
-		self.node_condicao = node_condicao
-		self.node_corpo = node_corpo
-		self.retornar_automaticamente = retornar_automaticamente
-		self.inicio = self.node_condicao.inicio
-		self.fim = self.node_corpo.fim
-
-class NodePara:
-	def __init__(self, node_nome, node_inicio, node_final, node_passo, node_corpo, retornar_automaticamente):
-		self.node_nome = node_nome
-		self.node_inicio = node_inicio
-		self.node_final = node_final
-		self.node_passo = node_passo
-		self.node_corpo = node_corpo
-		self.retornar_automaticamente = retornar_automaticamente
-		self.inicio = self.node_nome.inicio
-		self.fim = self.node_corpo.fim
-
-class NodeFuncao:
-	def __init__(self, node_nome, tokens_nomes, node_corpo, retornar_automaticamente):
-		self.node_nome = node_nome
-		self.tokens_nomes = tokens_nomes
-		self.node_corpo = node_corpo
-		self.retornar_automaticamente = retornar_automaticamente
-
-		if self.node_nome: self.inicio = self.node_nome.inicio
-		elif len(self.tokens_nomes) > 0: self.inicio = self.tokens_nomes[0].inicio
-		else: self.inicio = self.node_corpo.inicio
-
-		self.fim = self.node_corpo.fim
-
-class NodeChamar:
-	def __init__(self, node_chamado, nodes):
-		self.node_chamado = node_chamado
-		self.nodes = nodes
-		self.inicio = self.node_chamado.inicio
-
-		if len(self.nodes) > 0: self.fim = self.nodes[len(self.nodes) - 1].fim
-		else: self.fim = self.node_chamado.fim
-
-class NodeRetornar:
-	def __init__(self, node, inicio, fim):
-		self.node = node
-		self.inicio = inicio
-		self.fim = fim
-
-class NodeContinuar:
-	def __init__(self, inicio, fim):
-		self.inicio = inicio
-		self.fim = fim
-
-class NodeQuebrar:
-	def __init__(self, inicio, fim):
-		self.inicio = inicio
-		self.fim = fim
+from nodes import *	
 
 #######################################
 # PARSER
@@ -1372,7 +1192,7 @@ class Lista(Valor):
 		else: return None, Valor.operacao_ilegal(self, outro)
 
 	def multiplicado_por(self, outro):
-		if isinstance(outro, List):
+		if isinstance(outro, Lista):
 			nova_lista = self.copia()
 			nova_lista.elementos.extender(outro.elementos)
 			return nova_lista, None
@@ -1433,7 +1253,7 @@ class Lista(Valor):
 		else: return None, Valor.operacao_ilegal(self, outro)
 
 	def intersecao_de(self, outro):
-		if isinstance(outro, List):
+		if isinstance(outro, Lista):
 			return Lista([i for i in self.elementos if i in set(outro.elementos)]).fazer_contexto(self.contexto), None
 		else: return None, Valor.operacao_ilegal(self, outro)
 
@@ -1608,12 +1428,12 @@ class FuncaoInstalada(FuncaoBase):
 	executar_e_um_numero.arg_names = ["valor"]
 
 	def executar_e_um_texto(self, exec_ctx):
-		e_um_numero = isinstance(exec_ctx.tabela_simbolos.obter("valor"), String)
+		e_um_numero = isinstance(exec_ctx.tabela_simbolos.obter("valor"), Texto)
 		return ResultadoDaRT().sucesso(Numero.verdadeiro if e_um_numero else Numero.falso)
 	executar_e_um_texto.arg_names = ["valor"]
 
 	def executar_e_uma_lista(self, exec_ctx):
-		e_um_numero = isinstance(exec_ctx.tabela_simbolos.obter("valor"), List)
+		e_um_numero = isinstance(exec_ctx.tabela_simbolos.obter("valor"), Lista)
 		return ResultadoDaRT().sucesso(Numero.verdadeiro if e_um_numero else Numero.falso)
 	executar_e_uma_lista.arg_names = ["valor"]
 
