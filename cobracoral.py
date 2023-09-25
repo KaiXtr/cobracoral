@@ -1532,11 +1532,12 @@ class Funcao(FuncaoBase):
 		return REPR_FUNC.format(self.nome)
 
 class FuncaoInstalada(FuncaoBase):
-	def __init__(self, nome):
+	def __init__(self, nome, args=""):
 		super().__init__(nome)
+		self.args = args
 
 	def __repr__(self):
-		return REPR_BUILTIN.format(self.nome.upper())
+		return REPR_BUILTIN.format(self.nome.upper(),self.nome.lower(),self.args)
 
 	def executar(self, args):
 		resultado = ResultadoDaRT()
@@ -1558,6 +1559,10 @@ class FuncaoInstalada(FuncaoBase):
 		copia.fazer_contexto(self.contexto)
 		copia.fazer_posicao(self.inicio, self.fim)
 		return copia
+
+	def executar_listar(self, exec_ctx):
+		return ResultadoDaRT().sucesso(Texto(FUNCOES_LISTA))
+	executar_listar.arg_names = []
 
 	def executar_escrever(self, exec_ctx):
 		print(str(exec_ctx.tabela_simbolos.obter('valor')))
@@ -1588,6 +1593,7 @@ class FuncaoInstalada(FuncaoBase):
 
 	def executar_pausar(self, exec_ctx):
 		input()
+		return ResultadoDaRT().sucesso(Texto(""))
 		return ResultadoDaRT().sucesso(Texto(""))
 	executar_pausar.arg_names = []
 
@@ -1632,7 +1638,7 @@ class FuncaoInstalada(FuncaoBase):
 			for l in range(3,-1,-1):
 				p1 = str(int(l/2))
 				p2 = str(l%2)
-				print(p1 + ' ' + comp + ' ' + p2 + ' = ' + str(int(eval(exp.format(p1,p2)))))
+				print(f"{p1} {comp} {p2} = {str(int(eval(exp.format(p1,p2))))}")
 		return ResultadoDaRT().sucesso(Numero.nulo)
 	executar_tabela_binario.arg_names = ["operação"]
 
@@ -1653,7 +1659,7 @@ class FuncaoInstalada(FuncaoBase):
 				vl = ['F','V']
 				p1 = int(l/2)
 				p2 = l%2
-				print(vl[p1] + ' ' + comp + ' ' + vl[p2] + ' = ' + vl[int(eval(exp.format(p1,p2)))])
+				print(f"{vl[p1]} {comp} {vl[p2]} = {vl[int(eval(exp.format(p1,p2)))]}")
 		return ResultadoDaRT().sucesso(Numero.nulo)
 	executar_tabela_logico.arg_names = ["operação"]
 
@@ -1686,10 +1692,10 @@ class FuncaoInstalada(FuncaoBase):
 		listA = exec_ctx.tabela_simbolos.obter("listA")
 		listB = exec_ctx.tabela_simbolos.obter("listB")
 
-		if not isinstance(listA, List):
+		if not isinstance(listA, Lista):
 			return ResultadoDaRT().falha(ErroRT(self.inicio, self.fim,EM_FirstArgList,exec_ctx))
 
-		if not isinstance(listB, List):
+		if not isinstance(listB, Lista):
 			return ResultadoDaRT().falha(ErroRT(self.inicio, self.fim,EM_SecoArgList,exec_ctx))
 
 		listA.elementos.extend(listB.elementos)
@@ -1732,10 +1738,30 @@ class FuncaoInstalada(FuncaoBase):
 		return ResultadoDaRT().sucesso(Numero.nulo)
 	executar_abrir.arg_names = ["arquivo"]
 
-for i in ('escrever','escrever_ret','ler','ler_inteiro','limpar','pausar','esperar',
-	'e_um_numero','e_um_texto','e_uma_lista','e_uma_funcao','tabela_binario','tabela_logico',
-	'adicionar','remover','extender','tamanho','obter_hora_atual','obter_data_atual','abrir'):
-	exec(f'FuncaoInstalada.{i} = FuncaoInstalada("{i}")')
+#CRIAR FUNÇÃO INSTALADA PARA CADA NOME E INSTRUÇÃO
+for i in (
+	('listar',''),
+	('escrever','texto'),
+	('escrever_ret','texto'),
+	('ler',''),
+	('ler_inteiro',''),
+	('limpar',''),
+	('pausar',''),
+	('esperar','segundos'),
+	('e_um_numero','variável'),
+	('e_um_texto','variável'),
+	('e_uma_lista','variável'),
+	('e_uma_funcao','variável'),
+	('tabela_binario',''),
+	('tabela_logico',''),
+	('adicionar','variável'),
+	('remover','variável'),
+	('extender','tamanho'),
+	('tamanho','lista'),
+	('obter_hora_atual',''),
+	('obter_data_atual',''),
+	('abrir','arquivo')):
+	exec(f'FuncaoInstalada.{i[0]} = FuncaoInstalada("{i[0]}","{i[1]}")')
 
 #######################################
 # CONTEXTO
@@ -1992,6 +2018,7 @@ for c in range(2):
 	tabela_global_simbolos.criar(eval("'FALSO'." + case + "()"), Numero.falso)
 	tabela_global_simbolos.criar(eval("'VERDADEIRO'." + case + "()"), Numero.verdadeiro)
 	tabela_global_simbolos.criar(eval("'PI'." + case + "()"), Numero.pi)
+	tabela_global_simbolos.criar(eval("'LISTAR'." + case + "()"), FuncaoInstalada.listar)
 	tabela_global_simbolos.criar(eval("'ESCREVER'." + case + "()"), FuncaoInstalada.escrever)
 	tabela_global_simbolos.criar(eval("'ESCREVER_RET'." + case + "()"), FuncaoInstalada.escrever_ret)
 	tabela_global_simbolos.criar(eval("'LER'." + case + "()"), FuncaoInstalada.ler)

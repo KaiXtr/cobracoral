@@ -92,12 +92,34 @@ PC_CONTINUAR = ('CONTINUAR','continuar')
 PC_QUEBRAR = ('QUEBRAR','quebrar')
 PC_FIM = ('FIM','fim')
 
+FUNCOES_LISTA = ' ' + \
+	'escrever("texto"): escreve uma mensagem na tela.\n   ' + \
+	'escrever_ret("texto"): escreve uma mensagem na tela e retorna o texto.\n   ' + \
+	'ler(): aguarda por uma entrada de texto do usuário.\n   ' + \
+	'ler_inteiro(): aguarda por uma entrada de um número inteiro do usuário.\n   ' + \
+	'limpar(): apaga todas as linhas da tela.\n   ' + \
+	'pausar(): aguarda o usuário pressionar qualquer botão.\n   ' + \
+	'esperar(segundos): pausa o programa por um curto período de tempo.\n   ' + \
+	'e_um_numero(variável): verifica se a variável informada é um número.\n   ' + \
+	'e_um_texto(variável): verifica se a variável informada é um texto.\n   ' + \
+	'e_uma_lista(variável): verifica se a variável informada é uma lista.\n   ' + \
+	'e_uma_funcao(variável): verifica se a variável informada é uma função.\n   ' + \
+	'tabela_binario("operador"): exibe a tabela verdade de um operador em 0s e 1s.\n   ' + \
+	'tabela_logico("operador"): exibe a tabela verdade de um operador em Vs e Fs.\n   ' + \
+	'adicionar(lista,variável): adiciona uma variável à uma lista.\n   ' + \
+	'remover(lista,variável): remove uma variável de uma lista.\n   ' + \
+	'extender(lista1,lista2): adiciona todos os elementos da lista2 para a lista1.\n   ' + \
+	'tamanho(variável): retorna o tamanho de uma lista ou texto.\n   ' + \
+	'obter_hora_atual(): exibe a hora atual do sistema em horas, minutos e segundos.\n   ' + \
+	'obter_data_atual(): exibe a data atual do sistema em dias, meses e anos.\n   ' + \
+	'abrir("arquivo"): executa o código cobracoral de outro arquivo.\n   '
+
 TT_OPERAÇÕES = {**TT_OPERAÇÕES,**{i[0].lower(): i[1] for i in TT_OPERAÇÕES.items()}}
 TT_PALAVRASCHAVE += [i.lower() for i in TT_PALAVRASCHAVE]
 
 REPR_ANON = '<anônimo>'
 REPR_FUNC = '<função {}>'
-REPR_BUILTIN = '<função instalada {}>'
+REPR_BUILTIN = '<função instalada {}>\n   {}({})\nSempre utilize os parênteses para chamar a função!'
 
 EM_FILE = 'Arquivo'
 EM_LINE = 'linha'
