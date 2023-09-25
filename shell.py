@@ -3,36 +3,53 @@ import cobracoral
 import sys
 import os
 
-print('___█████.█████.█████.█████.█████.█████.█████.█████.█████.█....___')
-print('___█.....█...█.█...█.█...█.█...█.█.....█...█.█...█.█...█.█....___')
-print('___█.....█...█.████..████..█████.█.....█...█.████..█████.█....___')
-print('___█.....█...█.█...█.█...█.█...█.█.....█...█.█...█.█...█.█....___')
-print('___█████.█████.█████.█...█.█...█.█████.█████.█...█.█...█.█████___')
+print('___█████_█████_█████_█████_█████_█████_█████_█████_█████_█_______')
+print('___█_____█___█_█___█_█___█_█___█_█_____█___█_█___█_█___█_█_______')
+print('___█_____█___█_████__████__█████_█_____█___█_████__█████_█_______')
+print('___█_____█___█_█___█_█___█_█___█_█_____█___█_█___█_█___█_█_______')
+print('___█████_█████_█████_█___█_█___█_█████_█████_█___█_█___█_█████___')
 print('Desenvolvida por Ewerton Matheus Bezerra Ramos\n')
 
 try:
+	historico = [""]
+
 	#EXECUTAR NO CONSOLE
 	if len(sys.argv) == 1:
-		console_texto = "> "
+		console_texto = ":> "
+		retornar_resultado = False
+
 		while True:
+			#LER COMANDO E ADICIONAR AO HISTÓRICO
 			texto = input(console_texto)
 			if texto.strip() == "": continue
+			else: historico.append(texto)
+
+			#AJUDA
+			if texto.lower() == 'ajuda()':
+				arq = open("ajuda.txt","r")
+				print(arq.read())
+				arq.close()
+				print()
 			
 			#CONFIGURAÇÕES & MAIS
-			elif texto.lower() == 'sair': break
-			elif texto == 'CONSOLE_VERSÃO':
-				print(f"cobracoral v.0.1 x64 - python {str(sys.version_info[0])}.{str(sys.version_info[1])}.{str(sys.version_info[2])}")
-			elif texto.startswith('CONSOLE_TEXTO ='):
+			elif texto.lower() == 'sair()': break
+			elif texto.lower() in ('console_versão','console_versao'):
+				print(f"cobracoral v.0.1 x64 - python {str(sys.version_info[0])}.{str(sys.version_info[1])}.{str(sys.version_info[2])}\n")
+			elif texto.lower().startswith('console_texto ='):
 				console_texto = texto[16:] + ' '
+			elif texto.lower().startswith('retornar_resultado'):
+				retornar_resultado = not retornar_resultado
 			
 			#INTERPRETAR CÓDIGO
 			else:
 				resultado, erro = cobracoral.executar('<stdin>', texto)
-				if erro: print(erro.como_texto())
-				elif resultado:
-					if len(resultado.elementos) == 1: print(f"= {repr(resultado.elementos[0])}")
-					else: print(f"= {repr(resultado)}")
-			print()
+				if erro:
+					print(f"{erro.como_texto()}\n")
+				elif retornar_resultado and resultado:
+					if len(resultado.elementos) == 1:
+						print(f"= {repr(resultado.elementos[0])}\n")
+					else:
+						print(f"= {repr(resultado)}\n")
 
 	#EXECUTAR ARQUIVO
 	elif len(sys.argv) > 1:

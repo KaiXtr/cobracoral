@@ -1711,13 +1711,13 @@ class FuncaoInstalada(FuncaoBase):
 	executar_tamanho.arg_names = ["list"]
 
 	def executar_obter_hora_atual(self, exec_ctx):
-		print(datetime.datetime.today().strftime("%H:%M:%S"))
-		return ResultadoDaRT().sucesso(Numero.nulo)
+		d = datetime.datetime.today().strftime("%H:%M:%S")
+		return ResultadoDaRT().sucesso(Texto(d))
 	executar_obter_hora_atual.arg_names = []
 
 	def executar_obter_data_atual(self, exec_ctx):
-		print(datetime.datetime.today().strftime("%d/%m/%Y"))
-		return ResultadoDaRT().sucesso(Numero.nulo)
+		d = datetime.datetime.today().strftime("%d/%m/%Y")
+		return ResultadoDaRT().sucesso(Texto(d))
 	executar_obter_data_atual.arg_names = []
 
 	def executar_abrir(self, exec_ctx):
@@ -2032,8 +2032,9 @@ for c in range(2):
 	tabela_global_simbolos.criar(eval("'E_UM_NÚMERO'." + case + "()"), FuncaoInstalada.e_um_numero)
 	tabela_global_simbolos.criar(eval("'É_UM_NÚMERO'." + case + "()"), FuncaoInstalada.e_um_numero)
 	tabela_global_simbolos.criar(eval("'É_UM_TEXTO'." + case + "()"), FuncaoInstalada.e_um_texto)
-	tabela_global_simbolos.criar(eval("'E_UM_TEXTO'." + case + "()"), FuncaoInstalada.e_uma_lista)
-	tabela_global_simbolos.criar(eval("'É_UM_TEXTO'." + case + "()"), FuncaoInstalada.e_um_texto)
+	tabela_global_simbolos.criar(eval("'E_UM_TEXTO'." + case + "()"), FuncaoInstalada.e_um_texto)
+	tabela_global_simbolos.criar(eval("'É_UMA_LISTA'." + case + "()"), FuncaoInstalada.e_uma_lista)
+	tabela_global_simbolos.criar(eval("'E_UMA_LISTA'." + case + "()"), FuncaoInstalada.e_uma_lista)
 	tabela_global_simbolos.criar(eval("'É_UMA_FUNÇÃO'." + case + "()"), FuncaoInstalada.e_uma_funcao)
 	tabela_global_simbolos.criar(eval("'E_UMA_FUNÇÃO'." + case + "()"), FuncaoInstalada.e_uma_funcao)
 	tabela_global_simbolos.criar(eval("'E_UMA_FUNCÃO'." + case + "()"), FuncaoInstalada.e_uma_funcao)

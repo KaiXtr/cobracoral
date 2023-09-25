@@ -6,133 +6,161 @@
 
 ## Variáveis
 Formados por um par **_nome da variável_ = _valor da variável_**, são todos os dados necessários para a execução e criação de um algoritmo. As variáveis podem conter valores de vários tipos, como _inteiro, texto, lógico e real_.
-    `inteiro x = 10`
-    `texto y = "Olá Mundo!"`
-    `lógico z = verdadeiro`
-    `real a = 2.5`
-    `real b = pi`
+    `var x = 10`<br>
+    `var y = "Olá Mundo!"`<br>
+    `var z = verdadeiro`<br>
+    `var a = 2.5`<br>
+    `var b = pi`<br>
 
 ## Comentários
 Comentários são trechos do código que não são processados pelo interpretador, sendo livres para escrita fora da programação.
-`# comentário`
-`# eu posso escrever o que eu quiser aqui`
+    `# comentário`<br>
+    `# eu posso escrever o que eu quiser aqui`<br>
 
 ## Aritmética
 **Adição:**
-`x mais y`
-`x + y`
+    `x mais y`<br>
+    `x + y`<br>
 **Subtração:**
-`x menos y`
-`x - y`
+    `x menos y`<br>
+    `x - y`<br>
 **Multiplicação:**
-`x vezes y`
-`x * y`
-`x × y`
+    `x vezes y`<br>
+    `x * y`<br>
+    `x × y`<br>
 **Divisão:**
-`x dividido y`
-`x / y`
-`x \ y`
-`x ÷ y`
+    `x dividido y`<br>
+    `x / y`<br>
+    `x \ y`<br>
+    `x ÷ y`<br>
 **Resto da divisão:**
-`x resto y`
-`x % y`
+    `x resto y`<br>
+    `x % y`<br>
 **Potenciação:**
-`x elevado y`
-`x ^ y`
-`x ** y`
+    `x elevado y`<br>
+    `x ^ y`<br>
+    `x ** y`<br>
 **Radiciação:**
-`x rad y`
-`x √ y`
-`x // y`
+    `x rad y`<br>
+    `x √ y`<br>
+    `x // y`<br>
 
 ## Comparações Numéricas
 **Igualdade:**
-`0 == 0 ∴ verdadeiro`
-`0 == 1 ∴ falso`
+    `0 == 0 ∴ verdadeiro`<br>
+    `0 == 1 ∴ falso`<br>
 **Diferença:**
-`0 != 0 ∴ falso`
-`0 != 1 ∴ verdadeiro`
-`0 ~= 0 ∴ falso`
-`0 ~= 1 ∴ verdadeiro`
+    `0 != 0 ∴ falso`<br>
+    `0 != 1 ∴ verdadeiro`<br>
+    `0 ~= 0 ∴ falso`<br>
+    `0 ~= 1 ∴ verdadeiro`<br>
 **Menor que:**
-`2 < 3 ∴ verdadeiro`
-`3 < 2 ∴ falso`
+    `2 < 3 ∴ verdadeiro`<br>
+    `3 < 2 ∴ falso`<br>
 **Maior que**
-`2 > 3 ∴ falso`
-`3 > 2 ∴ verdadeiro`
+    `2 > 3 ∴ falso`<br>
+    `3 > 2 ∴ verdadeiro`<br>
 **Menor ou igual a:**
-`2 <= 2 ∴ verdadeiro`
-`1 <= 2 ∴ verdadeiro`
-`3 >= 2 ∴ falso`
+    `2 <= 2 ∴ verdadeiro`<br>
+    `1 <= 2 ∴ verdadeiro`<br>
+    `3 >= 2 ∴ falso`<br>
 **Maior ou igual a:**
-`6 >= 6 ∴ verdadeiro`
-`8 >= 6 ∴ verdadeiro`
-`3 >= 6 ∴ falso`
+    `6 >= 6 ∴ verdadeiro`<br>
+    `8 >= 6 ∴ verdadeiro`<br>
+    `3 >= 6 ∴ falso`<br>
 
 ## Comparações Lógicas
 **AND:**
-`1 e 1 ∴ verdadeiro`
-`0 e 1 ∴ falso`
-`1 & 0 ∴ falso`
-`0 & 0 ∴ falso`
+    `1 e 1 ∴ verdadeiro`<br>
+    `0 e 1 ∴ falso`<br>
+    `1 & 0 ∴ falso`<br>
+    `0 & 0 ∴ falso`<br>
 **OR:**
-`1 ou 1 ∴ verdadeiro`
-`0 ou 1 ∴ verdadeiro`
-`1 | 0 ∴ verdadeiro`
-`0 | 0 ∴ falso`
+    `1 ou 1 ∴ verdadeiro`<br>
+    `0 ou 1 ∴ verdadeiro`<br>
+    `1 | 0 ∴ verdadeiro`<br>
+    `0 | 0 ∴ falso`<br>
 **NAND:**
-`1 ne 1 ∴ falso`
-`0 ne 1 ∴ verdadeiro`
-`1 !& 0 ∴ verdadeiro`
-`0 ~& 0 ∴ verdadeiro`
+    `1 ne 1 ∴ falso`<br>
+    `0 ne 1 ∴ verdadeiro`<br>
+    `1 !& 0 ∴ verdadeiro`<br>
+    `0 ~& 0 ∴ verdadeiro`<br>
 **NOR:**
-`1 nou 1 ∴ falso`
-`0 nou 1 ∴ falso`
-`1 !| 0 ∴ falso`
-`0 ~| 0 ∴ verdadeiro`
+    `1 nou 1 ∴ falso`<br>
+    `0 nou 1 ∴ falso`<br>
+    `1 !| 0 ∴ falso`<br>
+    `0 ~| 0 ∴ verdadeiro`<br>
 **XOR:**
-`1 xou 1 ∴ falso`
-`0 xou 1 ∴ verdadeiro`
-`1 xou 0 ∴ verdadeiro`
-`0 xou 0 ∴ falso`
+    `1 xou 1 ∴ falso`<br>
+    `0 xou 1 ∴ verdadeiro`<br>
+    `1 xou 0 ∴ verdadeiro`<br>
+    `0 xou 0 ∴ falso`<br>
 **XNOR:**
-`1 xnou 1 ∴ verdadeiro`
-`0 xnou 1 ∴ falso`
-`1 xnou 0 ∴ falso`
-`0 xnou 0 ∴ verdadeiro`
+    `1 xnou 1 ∴ verdadeiro`<br>
+    `0 xnou 1 ∴ falso`<br>
+    `1 xnou 0 ∴ falso`<br>
+    `0 xnou 0 ∴ verdadeiro`<br>
 **Condicional:**
-`1 => 1 ∴ verdadeiro`
-`0 => 1 ∴ falso`
-`1 => 0 ∴ verdadeiro`
-`0 => 0 ∴ verdadeiro`
+    `1 => 1 ∴ verdadeiro`<br>
+    `0 => 1 ∴ falso`<br>
+    `1 => 0 ∴ verdadeiro`<br>
+    `0 => 0 ∴ verdadeiro`<br>
 **Bicondicional:**
-`1 <=> 1 ∴ verdadeiro`
-`0 <=> 1 ∴ falso`
-`1 <=> 0 ∴ falso`
-`0 <=> 0 ∴ verdadeiro`
+    `1 <=> 1 ∴ verdadeiro`<br>
+    `0 <=> 1 ∴ falso`<br>
+    `1 <=> 0 ∴ falso`<br>
+    `0 <=> 0 ∴ verdadeiro`<br>
 
 ## Entrada e Saída de Dados
 **Comando _Escrever (texto)_:** escreve uma mensagem de texto no terminal.
-`escrever("Olá Mundo!")`
+    `escrever("Olá Mundo!")`<br>
+**Comando _Escrever_ret (texto)_:** escreve uma mensagem de texto no terminal e retorna o resultado.
+    `escrever("Olá Mundo!")`<br>
 **Comando _Ler (variável)_:** aguarda a entrada de um usuário.
-`ler(x)`
+    `ler(x)`<br>
+**Comando _Ler_inteiro (variável)_:** aguarda a entrada de um número inteiro do usuário.
+    `ler_inteiro(x)`<br>
+**Comando _Limpar_:** limpa todo texto anterior do terminal.
+    `limpar()`<br>
+    `cls()`<br>
+**Comando _Pausar_ ()_:** aguarda uma tecla pressionada qualquer do usuário.
+    `pausar()`<br>
+**Comando _Esperar (segundos)_:** espera por um intervalo de x segundos.
+    `esperar(3)`<br>
+
+# Análise de dados
+**Comando _É_um_número (variável)_:** verifica se a variável informada é um número.
+    `É_um_número(x)`<br>
+    `E_um_número(x)`<br>
+    `É_um_numero(x)`<br>
+    `E_um_numero(x)`<br>
+**Comando _É_um_número (variável)_:** verifica se a variável informada é um número.
+    `É_um_número(x)`<br>
+    `E_um_número(x)`<br>
+    `É_um_numero(x)`<br>
+    `E_um_numero(x)`<br>
 
 ## Listas
-**Comando _Limpar_:** limpa todo texto anterior do terminal.
-`limpar()`
-`cls()`
 **Comando _Adicionar (elemento)_:** adiciona um elemento à uma lista.
-`x = [0,1]`
-`x.adicionar(2)`
-`x = [0,1,2]`
+    `x = [0,1]`<br>
+    `x.adicionar(2)`<br>
+    `x = [0,1,2]`<br>
 **Comando _Remover (índice)_:** remove um elemento de uma lista.
-`x = [2,5]`
-`x.remover(1)`
-`x = [2]`
+    `x = [2,5]`<br>
+    `x.remover(1)`<br>
+    `x = [2]`<br>
 **Comando _Tamanho (lista/texto)_:** verifica o tamanho de uma lista ou texto.
-`x = [0,1,5,8]`
-`y = tamanho(x)`
-`y = 4`
+    `x = [0,1,5,8]`<br>
+    `y = tamanho(x)`<br>
+    `y = 4`<br>
+
+## Funções gerais do Cobracoral
+**Comando _Ajuda ()_:** exibe um texto de ajuda para o usuário.
+    `ajuda()`<br>
+**Comando _Listar ()_:** exibe todas as funções instaladas da linguagem.
+    `lista()`<br>
+**Comando _Sair ()_:** sair do shell da linguagem
+    `sair()`<br>
     
 
 # Agradecimentos

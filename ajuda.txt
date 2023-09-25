@@ -1,0 +1,36 @@
+Como programar um algoritmo?
+
+Escrever códigos para um computador é como escrever palavras mágicas que
+falam para o robô o que ele tem que fazer, tim tim por tim tim.
+
+O computador pode ser muito burro às vezes, então é bom explicar tudo direitinho! ;)
+
+Assim como uma criança na escola, um computador também sabe ler, escrever e contar, 
+pois ele lê o código que você escreve para ele, escreve suas próprias palavras e 
+faz contas de matemática com números. A grande diferença é que o computador faz tudo 
+isso muito mais rápido do que a gente.
+
+Então, se você escrever contas de matemática, ele vai ler os números e fazer a conta.
+Lembre-se que, nos computadores, o sinal de multiplicação é o asterisco *,
+o sinal de divisão é o barra / e o sinal de potenciação é o ^.
+
+Exemplo:
+    3 + 3 dá 6. 5 * 10 dá 50. 2 ^ 4 dá 16.
+
+Você pode guardar o valor das suas contas criando o que chamamos de variáveis,
+que são como as letras e incógnitas da matemática. Quando a gente cria uma variável,
+é como se a gente quisesse adivinhar o valor dessa variável.
+
+Exemplo:
+    var x = 3. var y = 3 + 3. var z = "Olá!"
+
+Uma coisa muito legal sobre as variáveis é que elas não precisam ser feitas só
+de números naturais, mas também números inteiros (que vem com sinal), textos, conjuntos
+e valores lógicos (verdadeiro ou falso). Nós podemos usar essas variáveis que
+criamos para uma gama de coisas, como escrever o valor dessa variável na tela:
+
+Exemplo:
+    var x = "Brigadeiro" e escrever(x) faz com que a mensagem "Brigadeiro" apareça na tela!
+
+A partir disso, muitas coisas podem ser feitas com o Cobracoral, peça a ajuda
+de um orientador se tiver mais dúvidas! ;)
