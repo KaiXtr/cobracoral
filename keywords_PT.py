@@ -92,7 +92,7 @@ PC_CONTINUAR = ('CONTINUAR','continuar')
 PC_QUEBRAR = ('QUEBRAR','quebrar')
 PC_FIM = ('FIM','fim')
 
-FUNCOES_LISTA = ' ' + \
+FUNCOES_LISTA = '   ' + \
 	'escrever("texto"): escreve uma mensagem na tela.\n   ' + \
 	'escrever_ret("texto"): escreve uma mensagem na tela e retorna o texto.\n   ' + \
 	'ler(): aguarda por uma entrada de texto do usuário.\n   ' + \

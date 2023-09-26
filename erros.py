@@ -42,8 +42,8 @@ class ErroRT(Erro):
 		ctx = self.contexto
 		
 		while ctx:
-			resultado = f'\t{EM_FILE} {pos.fn}, {EM_LINE} {str(pos.ln + 1)} {EM_IN} {ctx.mostrar_nome}\n' + resultado
+			resultado = f"\t{EM_FILE} {pos.fn}, {EM_LINE} {str(pos.ln + 1)} {EM_IN} {ctx.mostrar_nome}\n{resultado}"
 			pos = ctx.posicao_do_pai
 			ctx = ctx.pai
 		
-		return EM_Traceback + '\n' + resultado
+		return f"{EM_Traceback}\n{resultado}"

@@ -1,10 +1,14 @@
-# EXEMPLO DE CÓDIGO CC
 
-escrever("Digite o valor de x...")
-var x = ler_inteiro()
-escrever("O valor de x é " + x)
+escrever("QUIZ!")
 pausar()
+escrever("Qual conta está correta?")
+esperar(1)
+escrever("1: 75 + 25 = 100")
+esperar(1)
+escrever("2: 30 - 11 = 21")
+esperar(1)
+escrever("3: 45 - 3 = 41")
 
-SE x < 10 ENTAO escrever(x + " é menor do que 10")
-SENAOSE x == 10 ENTAO escrever(x + " é igual a 10")
-SENAO escrever(x + " é maior do que 10")
+var x = ler_inteiro()
+
+SE x == 1 ENTAO escrever("Certa resposta!") SENAO escrever("Você errou...")

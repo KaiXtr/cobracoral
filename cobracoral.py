@@ -87,7 +87,7 @@ class Lexer:
 			elif self.car_atual in ';\n': tokens.append(Token(TT_NOVALINHA,inicio=self.pos)); self.avancar()
 			elif self.car_atual in DIGITOS: tokens.append(self.fazer_num())
 			elif self.car_atual in ALFABETO: tokens.append(self.fazer_identificador())
-			elif self.car_atual in '"' + "'": tokens.append(self.fazer_texto())
+			elif self.car_atual in '"\'': tokens.append(self.fazer_texto())
 			elif self.car_atual in ',': tokens.append(Token(TT_VIRGULA,inicio=self.pos)); self.avancar()
 			
 			#OPERAÇÕES ARITMÉTICAS
@@ -129,7 +129,7 @@ class Lexer:
 				inicio = self.pos.copia()
 				car = self.car_atual
 				self.avancar()
-				return [], ErroDeCaractereIlegal(inicio, self.pos, "'" + car + "'")
+				return [], ErroDeCaractereIlegal(inicio, self.pos, f"'{car}'")
 		
 		tokens.append(Token(TT_FIM,inicio=self.pos))
 		return tokens, None
@@ -435,7 +435,7 @@ class Parser:
 				if resultado.erro:
 					return resultado.falha(ErroDeSintaxe(
 						self.tok_atual.inicio, self.tok_atual.fim,
-						EM_Expected + "')', 'VAR', 'SE', 'PARA', 'ENQUANTO', 'FUNÇÃO', inteiro, real, identificador, '+', '-', '(', '[' " + EM_Expected + " 'NÃO'"
+						f"{EM_Expected}')', 'VAR', 'SE', 'PARA', 'ENQUANTO', 'FUNÇÃO', inteiro, real, identificador, '+', '-', '(', '[' {EM_Expected} 'NÃO'"
 					))
 
 				while self.tok_atual.tipo == TT_VIRGULA:
@@ -537,7 +537,7 @@ class Parser:
 				if resultado.erro: return resultado
 
 			if self.tok_atual.tipo != TT_FECCOLCHE:
-				return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,EM_Expected + "',' " + EM_OR + " ']'"))
+				return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,f"{EM_Expected}',' {EM_OR} ']'"))
 
 			resultado.registrar_avanco()
 			self.avancar()
@@ -769,7 +769,7 @@ class Parser:
 		else:
 			nome = None
 			if self.tok_atual.tipo != TT_ABRPARENT:
-				return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,EM_Identifier + " " + EM_OR + " um '('"))
+				return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,f"{EM_Identifier} {EM_OR} um '('"))
 		
 		resultado.registrar_avanco()
 		self.avancar()
@@ -792,10 +792,10 @@ class Parser:
 				self.avancar()
 			
 			if self.tok_atual.tipo != TT_FECPARENT:
-				return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,EM_Expected + "',' " + EM_OR + " um ')'"))
+				return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,f"{EM_Expected}',' {EM_OR} um ')'"))
 		else:
 			if self.tok_atual.tipo != TT_FECPARENT:
-				return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,EM_Expected + " " + EM_OR + " um ')'"))
+				return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,f"{EM_Expected} {EM_OR} um ')'"))
 
 		resultado.registrar_avanco()
 		self.avancar()
@@ -810,7 +810,7 @@ class Parser:
 			return resultado.sucesso(NodeFuncao(nome,arg_name_toks,corpo,True))
 		
 		if self.tok_atual.tipo != TT_NOVALINHA:
-			return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,EM_Expected + "'=' " + EM_OR + " NOVALINHA"))
+			return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,f"{EM_Expected}'=' {EM_OR} NOVALINHA"))
 
 		resultado.registrar_avanco()
 		self.avancar()
@@ -819,7 +819,7 @@ class Parser:
 		if resultado.erro: return resultado
 
 		if not self.tok_atual.combinam(TT_PALAVRASCHAVE, PC_FIM):
-			return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,EM_Expected + "'FIM'"))
+			return resultado.falha(ErroDeSintaxe(self.tok_atual.inicio, self.tok_atual.fim,f"{EM_Expected}'FIM'"))
 
 		resultado.registrar_avanco()
 		self.avancar()
@@ -1381,7 +1381,8 @@ class FuncaoInstalada(FuncaoBase):
 		return copia
 
 	def executar_listar(self, exec_ctx):
-		return ResultadoDaRT().sucesso(Texto(FUNCOES_LISTA))
+		print(FUNCOES_LISTA)
+		return ResultadoDaRT().sucesso(Numero.nulo)
 	executar_listar.arg_names = []
 
 	def executar_escrever(self, exec_ctx):
@@ -1834,45 +1835,45 @@ tabela_global_simbolos = TabelaDeSimbolos()
 for c in range(2):
 	if c == 0: case = "upper"
 	else: case = "lower"
-	tabela_global_simbolos.criar(eval("'NULO'." + case + "()"), Numero.nulo)
-	tabela_global_simbolos.criar(eval("'FALSO'." + case + "()"), Numero.falso)
-	tabela_global_simbolos.criar(eval("'VERDADEIRO'." + case + "()"), Numero.verdadeiro)
-	tabela_global_simbolos.criar(eval("'PI'." + case + "()"), Numero.pi)
-	tabela_global_simbolos.criar(eval("'LISTAR'." + case + "()"), FuncaoInstalada.listar)
-	tabela_global_simbolos.criar(eval("'ESCREVER'." + case + "()"), FuncaoInstalada.escrever)
-	tabela_global_simbolos.criar(eval("'ESCREVER_RET'." + case + "()"), FuncaoInstalada.escrever_ret)
-	tabela_global_simbolos.criar(eval("'LER'." + case + "()"), FuncaoInstalada.ler)
-	tabela_global_simbolos.criar(eval("'LER_INTEIRO'." + case + "()"), FuncaoInstalada.ler_inteiro)
-	tabela_global_simbolos.criar(eval("'LIMPAR'." + case + "()"), FuncaoInstalada.limpar)
-	tabela_global_simbolos.criar(eval("'CLS'." + case + "()"), FuncaoInstalada.limpar)
-	tabela_global_simbolos.criar(eval("'PAUSAR'." + case + "()"), FuncaoInstalada.pausar)
-	tabela_global_simbolos.criar(eval("'ESPERAR'." + case + "()"), FuncaoInstalada.esperar)
-	tabela_global_simbolos.criar(eval("'E_UM_NUMERO'." + case + "()"), FuncaoInstalada.e_um_numero)
-	tabela_global_simbolos.criar(eval("'É_UM_NUMERO'." + case + "()"), FuncaoInstalada.e_um_numero)
-	tabela_global_simbolos.criar(eval("'E_UM_NÚMERO'." + case + "()"), FuncaoInstalada.e_um_numero)
-	tabela_global_simbolos.criar(eval("'É_UM_NÚMERO'." + case + "()"), FuncaoInstalada.e_um_numero)
-	tabela_global_simbolos.criar(eval("'É_UM_TEXTO'." + case + "()"), FuncaoInstalada.e_um_texto)
-	tabela_global_simbolos.criar(eval("'E_UM_TEXTO'." + case + "()"), FuncaoInstalada.e_um_texto)
-	tabela_global_simbolos.criar(eval("'É_UMA_LISTA'." + case + "()"), FuncaoInstalada.e_uma_lista)
-	tabela_global_simbolos.criar(eval("'E_UMA_LISTA'." + case + "()"), FuncaoInstalada.e_uma_lista)
-	tabela_global_simbolos.criar(eval("'É_UMA_FUNÇÃO'." + case + "()"), FuncaoInstalada.e_uma_funcao)
-	tabela_global_simbolos.criar(eval("'E_UMA_FUNÇÃO'." + case + "()"), FuncaoInstalada.e_uma_funcao)
-	tabela_global_simbolos.criar(eval("'E_UMA_FUNCÃO'." + case + "()"), FuncaoInstalada.e_uma_funcao)
-	tabela_global_simbolos.criar(eval("'E_UMA_FUNCAO'." + case + "()"), FuncaoInstalada.e_uma_funcao)
-	tabela_global_simbolos.criar(eval("'É_UMA_FUNCÃO'." + case + "()"), FuncaoInstalada.e_uma_funcao)
-	tabela_global_simbolos.criar(eval("'E_UMA_FUNÇAO'." + case + "()"), FuncaoInstalada.e_uma_funcao)
-	tabela_global_simbolos.criar(eval("'TABELA_BINÁRIO'." + case + "()"), FuncaoInstalada.tabela_binario)
-	tabela_global_simbolos.criar(eval("'TABELA_BINARIO'." + case + "()"), FuncaoInstalada.tabela_binario)
-	tabela_global_simbolos.criar(eval("'TABELA_LÓGICO'." + case + "()"), FuncaoInstalada.tabela_logico)
-	tabela_global_simbolos.criar(eval("'TABELA_LOGICO'." + case + "()"), FuncaoInstalada.tabela_logico)
-	tabela_global_simbolos.criar(eval("'ADD'." + case + "()"), FuncaoInstalada.adicionar)
-	tabela_global_simbolos.criar(eval("'ADICIONAR'." + case + "()"), FuncaoInstalada.adicionar)
-	tabela_global_simbolos.criar(eval("'REMOVER'." + case + "()"), FuncaoInstalada.remover)
-	tabela_global_simbolos.criar(eval("'EXTENDER'." + case + "()"), FuncaoInstalada.extender)
-	tabela_global_simbolos.criar(eval("'TAMANHO'." + case + "()"), FuncaoInstalada.tamanho)
-	tabela_global_simbolos.criar(eval("'OBTER_HORA_ATUAL'." + case + "()"), FuncaoInstalada.obter_hora_atual)
-	tabela_global_simbolos.criar(eval("'OBTER_DATA_ATUAL'." + case + "()"), FuncaoInstalada.obter_data_atual)
-	tabela_global_simbolos.criar(eval("'ABRIR'." + case + "()"), FuncaoInstalada.executar)
+	tabela_global_simbolos.criar(eval(f"'NULO'.{case}()"), Numero.nulo)
+	tabela_global_simbolos.criar(eval(f"'FALSO'.{case}()"), Numero.falso)
+	tabela_global_simbolos.criar(eval(f"'VERDADEIRO'.{case}()"), Numero.verdadeiro)
+	tabela_global_simbolos.criar(eval(f"'PI'.{case}()"), Numero.pi)
+	tabela_global_simbolos.criar(eval(f"'LISTAR'.{case}()"), FuncaoInstalada.listar)
+	tabela_global_simbolos.criar(eval(f"'ESCREVER'.{case}()"), FuncaoInstalada.escrever)
+	tabela_global_simbolos.criar(eval(f"'ESCREVER_RET'.{case}()"), FuncaoInstalada.escrever_ret)
+	tabela_global_simbolos.criar(eval(f"'LER'.{case}()"), FuncaoInstalada.ler)
+	tabela_global_simbolos.criar(eval(f"'LER_INTEIRO'.{case}()"), FuncaoInstalada.ler_inteiro)
+	tabela_global_simbolos.criar(eval(f"'LIMPAR'.{case}()"), FuncaoInstalada.limpar)
+	tabela_global_simbolos.criar(eval(f"'CLS'.{case}()"), FuncaoInstalada.limpar)
+	tabela_global_simbolos.criar(eval(f"'PAUSAR'.{case}()"), FuncaoInstalada.pausar)
+	tabela_global_simbolos.criar(eval(f"'ESPERAR'.{case}()"), FuncaoInstalada.esperar)
+	tabela_global_simbolos.criar(eval(f"'E_UM_NUMERO'.{case}()"), FuncaoInstalada.e_um_numero)
+	tabela_global_simbolos.criar(eval(f"'É_UM_NUMERO'.{case}()"), FuncaoInstalada.e_um_numero)
+	tabela_global_simbolos.criar(eval(f"'E_UM_NÚMERO'.{case}()"), FuncaoInstalada.e_um_numero)
+	tabela_global_simbolos.criar(eval(f"'É_UM_NÚMERO'.{case}()"), FuncaoInstalada.e_um_numero)
+	tabela_global_simbolos.criar(eval(f"'É_UM_TEXTO'.{case}()"), FuncaoInstalada.e_um_texto)
+	tabela_global_simbolos.criar(eval(f"'E_UM_TEXTO'.{case}()"), FuncaoInstalada.e_um_texto)
+	tabela_global_simbolos.criar(eval(f"'É_UMA_LISTA'.{case}()"), FuncaoInstalada.e_uma_lista)
+	tabela_global_simbolos.criar(eval(f"'E_UMA_LISTA'.{case}()"), FuncaoInstalada.e_uma_lista)
+	tabela_global_simbolos.criar(eval(f"'É_UMA_FUNÇÃO'.{case}()"), FuncaoInstalada.e_uma_funcao)
+	tabela_global_simbolos.criar(eval(f"'E_UMA_FUNÇÃO'.{case}()"), FuncaoInstalada.e_uma_funcao)
+	tabela_global_simbolos.criar(eval(f"'E_UMA_FUNCÃO'.{case}()"), FuncaoInstalada.e_uma_funcao)
+	tabela_global_simbolos.criar(eval(f"'E_UMA_FUNCAO'.{case}()"), FuncaoInstalada.e_uma_funcao)
+	tabela_global_simbolos.criar(eval(f"'É_UMA_FUNCÃO'.{case}()"), FuncaoInstalada.e_uma_funcao)
+	tabela_global_simbolos.criar(eval(f"'E_UMA_FUNÇAO'.{case}()"), FuncaoInstalada.e_uma_funcao)
+	tabela_global_simbolos.criar(eval(f"'TABELA_BINÁRIO'.{case}()"), FuncaoInstalada.tabela_binario)
+	tabela_global_simbolos.criar(eval(f"'TABELA_BINARIO'.{case}()"), FuncaoInstalada.tabela_binario)
+	tabela_global_simbolos.criar(eval(f"'TABELA_LÓGICO'.{case}()"), FuncaoInstalada.tabela_logico)
+	tabela_global_simbolos.criar(eval(f"'TABELA_LOGICO'.{case}()"), FuncaoInstalada.tabela_logico)
+	tabela_global_simbolos.criar(eval(f"'ADD'.{case}()"), FuncaoInstalada.adicionar)
+	tabela_global_simbolos.criar(eval(f"'ADICIONAR'.{case}()"), FuncaoInstalada.adicionar)
+	tabela_global_simbolos.criar(eval(f"'REMOVER'.{case}()"), FuncaoInstalada.remover)
+	tabela_global_simbolos.criar(eval(f"'EXTENDER'.{case}()"), FuncaoInstalada.extender)
+	tabela_global_simbolos.criar(eval(f"'TAMANHO'.{case}()"), FuncaoInstalada.tamanho)
+	tabela_global_simbolos.criar(eval(f"'OBTER_HORA_ATUAL'.{case}()"), FuncaoInstalada.obter_hora_atual)
+	tabela_global_simbolos.criar(eval(f"'OBTER_DATA_ATUAL'.{case}()"), FuncaoInstalada.obter_data_atual)
+	tabela_global_simbolos.criar(eval(f"'ABRIR'.{case}()"), FuncaoInstalada.executar)
 
 def executar(arquivo, texto):
 	#CRIAR TOKENS

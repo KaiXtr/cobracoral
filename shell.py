@@ -8,7 +8,7 @@ print('___█_____█___█_█___█_█___█_█___█_█_____█___█_█_
 print('___█_____█___█_████__████__█████_█_____█___█_████__█████_█_______')
 print('___█_____█___█_█___█_█___█_█___█_█_____█___█_█___█_█___█_█_______')
 print('___█████_█████_█████_█___█_█___█_█████_█████_█___█_█___█_█████___')
-print('Desenvolvida por Ewerton Matheus Bezerra Ramos\n')
+print('Desenvolvida por Ewerton Matheus Bezerra Ramos ("sair()" para fechar o shell)\n')
 
 try:
 	historico = [""]
@@ -55,16 +55,16 @@ try:
 	elif len(sys.argv) > 1:
 		if sys.argv[1].endswith(".cc") or sys.argv[1].endswith(".cobracoral"):
 			script = None
-			try:
-				with open(sys.argv[1], "r") as f: 
-					cript = f.read()  
-				resultado, erro = cobracoral.executar(sys.argv[1], script)
-				if erro:
-					print(erro.como_texto())
-				'''elif resultado:
-					if len(resultado.elementos) == 1: print('= ' + repr(resultado.elementos[0]))
-					else: print('= ' + repr(resultado))'''
-			except: print(f"Falha ao abrir o arquivo \"{sys.argv[1]}\" (talvez tenha sido deletado, movido ou renomeado)")
+			#try:
+			with open(sys.argv[1], "r") as f: 
+				script = f.read()  
+			resultado, erro = cobracoral.executar(sys.argv[1], script)
+			if erro:
+				print(erro.como_texto())
+			'''elif resultado:
+				if len(resultado.elementos) == 1: print('= ' + repr(resultado.elementos[0]))
+				else: print('= ' + repr(resultado))'''
+			#except: print(f"Falha ao abrir o arquivo \"{sys.argv[1]}\" (talvez tenha sido deletado, movido ou renomeado)")
 		else:
 			os.system('cls' if os.name == 'nt' else 'clear')
 			print("FORMATO INVÁLIDO DE ARQUIVO. Cobracoral executa apenas arquivos .cobracoral ou .cc")
