@@ -9,8 +9,7 @@ def listar_variacoes(texto):
 					old = texto.replace(texto[c],i[0].upper())
 					lista.append(old)
 		texto = old if old else None
-	return lista
-
+	return tuple(lista)
 
 ALFABETO = 'abcdefghijklmnopqrstuvwxyz'
 ACENTOS = {'a': 'äåæªáâãà','c': 'ç','e': 'éèê','i': 'íìî','n': 'ñ','o': 'óòôõ','u': 'úù'}

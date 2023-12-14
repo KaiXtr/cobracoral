@@ -2,6 +2,7 @@
 import cobracoral
 import sys
 import os
+import io
 
 print('___█████_█████_█████_█████_█████_█████_█████_█████_█████_█_______')
 print('___█_____█___█_█___█_█___█_█___█_█_____█___█_█___█_█___█_█_______')
@@ -26,7 +27,7 @@ try:
 
 			#AJUDA
 			if texto.lower() == 'ajuda()':
-				arq = open("ajuda.txt","r")
+				arq = io.open("../docs/ajuda.txt",mode="r",encoding="utf-8")
 				print(arq.read())
 				arq.close()
 				print()
@@ -53,10 +54,10 @@ try:
 
 	#EXECUTAR ARQUIVO
 	elif len(sys.argv) > 1:
-		if sys.argv[1].endswith(".cc") or sys.argv[1].endswith(".cobracoral"):
+		if sys.argv[1].endswith(".cbr") or sys.argv[1].endswith(".cobracoral"):
 			script = None
 			#try:
-			with open(sys.argv[1], "r") as f: 
+			with io.open(sys.argv[1], mode="r",encoding="utf-8") as f: 
 				script = f.read()  
 			resultado, erro = cobracoral.executar(sys.argv[1], script)
 			if erro:
