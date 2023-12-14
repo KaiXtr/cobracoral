@@ -6,14 +6,9 @@
 from keywords_PT import *
 from erros import *
 from posicao import *
-
-import datetime
-import time
-import os
-
 from tokens import *
 from lexer import *
-from nodes import *	
+from nodes import *
 from cbr_parser import *
 from resultado_da_rt import *
 from valores import *
