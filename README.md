@@ -5,7 +5,7 @@
 # Como utilizar Cobracoral:
 Para executar código cobracoral, é necessário ter a linguagem python instalada no sistema, e então, executar o arquivo shell.py no diretório /src. Utilize o código abaixo para executar o arquivo de exemplo:
 
-`<br>python src/shell.py exemplo.cbr`
+`python src/shell.py exemplo.cbr`
 
 # Como programar em Cobracoral:
 
